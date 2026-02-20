@@ -77,7 +77,6 @@ h2 {
 }
 
 p { font-size: 16px; line-height: 1.8; color: #aaa; }
-
 .small { font-size: 14px; color: #666; margin-top: 40px; }
 
 .fade {
@@ -196,7 +195,7 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
-/* ISET PRINCIPAL */
+/* ================= ISET PRINCIPAL ================= */
 
 const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
@@ -213,8 +212,8 @@ function drawISET() {
   ctx.beginPath();
   ctx.moveTo(0, canvas.height - threshold);
   ctx.lineTo(canvas.width, canvas.height - threshold);
-  ctx.strokeStyle = "rgba(255,255,255,0.3)";
   ctx.setLineDash([6,6]);
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
   ctx.stroke();
   ctx.setLineDash([]);
 
@@ -242,12 +241,9 @@ function drawISET() {
 
   requestAnimationFrame(drawISET);
 }
-
 drawISET();
 
-/* =========================
-   CAMPO TERRITORIAL REACTIVO EMOFLOW
-========================= */
+/* ================= MAPA EMOFLOW ================= */
 
 const mapCanvas = document.getElementById('impactMap');
 const mapCtx = mapCanvas.getContext('2d');
@@ -266,189 +262,34 @@ const territories = [
 
 function clamp(v){ return Math.max(0,Math.min(v,1)); }
 
-territories.forEach(ter=>{
-
-  const baseRadius = 3 + ter.iset*4;
-
-  // ===== NÚCLEO =====
-  mapCtx.beginPath();
-  mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
-  mapCtx.fillStyle="#ffffff";
-  mapCtx.fill();
-
-  // ===== CAPAS DE RESONANCIA AVANZADA =====
-  if(ter.iret > 0.3){
-
-    const layers = 3;
-
-    for(let i=1;i<=layers;i++){
-
-      const pulse =
-        Math.sin(t*0.08 + i)*2;
-
-      const expansion =
-        (i*12) +
-        (pulse * ter.iret * 2);
-
-      const alpha =
-        (0.18 * ter.iret) / i;
-
-      const segments = 60;
-
-      mapCtx.beginPath();
-
-      for(let a=0; a<=segments; a++){
-
-        const angle = (a/segments)*Math.PI*2;
-
-        // si riesgo crítico → pierde simetría
-        let distortion = 0;
-
-        if(ter.iret > 0.85){
-          distortion =
-            Math.sin(angle*4 + t*0.2) *
-            ter.iret *
-            4;
-        }
-
-        const rx =
-          (baseRadius + expansion + distortion);
-
-        const ry =
-          (baseRadius + expansion - distortion*0.4);
-
-        const x =
-          ter.x + Math.cos(angle)*rx;
-
-        const y =
-          ter.y + Math.sin(angle)*ry;
-
-        if(a===0) mapCtx.moveTo(x,y);
-        else mapCtx.lineTo(x,y);
+function updateTerritories(){
+  territories.forEach((ter,i)=>{
+    let base = 0.6 + 0.6*Math.sin(t*0.02 + i);
+    territories.forEach((other,j)=>{
+      if(i !== j){
+        const dx = ter.x - other.x;
+        const dy = ter.y - other.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        base += other.iset * Math.exp(-dist*0.008) * 0.08;
       }
-
-      mapCtx.strokeStyle =
-        "rgba(255,255,255,"+alpha+")";
-
-      mapCtx.lineWidth = 1;
-      mapCtx.stroke();
-    }
-  }
-
-  // ===== TEXTO =====
-  mapCtx.font="11px monospace";
-  mapCtx.fillStyle="rgba(255,255,255,0.6)";
-  mapCtx.textAlign="center";
-  mapCtx.fillText(ter.name,ter.x,ter.y+18);
-
-  mapCtx.fillStyle="rgba(255,255,255,0.45)";
-  mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
-
-  mapCtx.fillStyle="rgba(255,255,255,0.35)";
-  mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
-
-});
+    });
+    ter.prev = ter.iset;
+    ter.iset = Math.min(base,1.6);
+    const velocity = ter.iset - ter.prev;
+    const proximity = ter.iset / 1.3;
+    ter.iret = clamp((0.65*proximity) + (0.35*velocity*6));
+  });
 }
 
 function drawSystem(){
 
   mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
-
   updateTerritories();
-
-  const spacing = 24;
-
-  const systemicStress = territories.some(t=>t.iret > 0.9);
-
-  for(let y=0;y<=mapCanvas.height;y+=spacing){
-
-    mapCtx.beginPath();
-
-    for(let x=0;x<=mapCanvas.width;x++){
-
-      let baseField =
-        Math.sin(x*0.006 + y*0.002);
-
-      let deformation = 0;
-
-      territories.forEach(ter=>{
-        const dx = x-ter.x;
-        const dy = y-ter.y;
-        const dist = Math.sqrt(dx*dx+dy*dy);
-
-        // ISET fuerte y más amplio
-        deformation +=
-          (ter.iset*55) *
-          Math.exp(-dist*0.012);
-      });
-
-      // IRET introduce irregularidad dinámica
-      let instability = 0;
-      territories.forEach(ter=>{
-        if(ter.iret > 0.6){
-          const dx = x-ter.x;
-          const dy = y-ter.y;
-          const dist = Math.sqrt(dx*dx+dy*dy);
-          instability +=
-            Math.sin(dist*0.08 + t*0.15) *
-            ter.iret *
-            6 *
-            Math.exp(-dist*0.02);
-        }
-      });
-
-      // Si hay estrés sistémico → altera campo global
-      let systemicDistortion = 0;
-      if(systemicStress){
-        systemicDistortion =
-          Math.sin(x*0.01 + t*0.08) * 6;
-      }
-
-      const finalY =
-        y +
-        baseField*4 +
-        deformation*0.025 +
-        instability +
-        systemicDistortion;
-
-      if(x===0) mapCtx.moveTo(x,finalY);
-      else mapCtx.lineTo(x,finalY);
-    }
-
-    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
-    mapCtx.stroke();
-  }
-
-  // conexiones
-  territories.forEach((a,i)=>{
-    territories.forEach((b,j)=>{
-      if(i<j){
-        const interaction = Math.abs(a.iset-b.iset);
-        let alpha = 0.05 + interaction*0.2;
-
-        if(a.iret>0.8 && b.iret>0.8){
-          mapCtx.setLineDash([2,4]);
-          alpha += 0.1;
-        } else {
-          mapCtx.setLineDash([]);
-        }
-
-        mapCtx.beginPath();
-        mapCtx.moveTo(a.x,a.y);
-        mapCtx.lineTo(b.x,b.y);
-        mapCtx.strokeStyle="rgba(255,255,255,"+alpha+")";
-        mapCtx.stroke();
-      }
-    });
-  });
-
-  mapCtx.setLineDash([]);
 
   territories.forEach(ter=>{
 
     const radius = 3 + ter.iset*4;
 
-    // Halo proporcional a IRET
     if(ter.iret > 0.4){
       const pulse = Math.sin(t*0.12)*2;
       mapCtx.beginPath();
@@ -484,9 +325,8 @@ function drawSystem(){
   t++;
   requestAnimationFrame(drawSystem);
 }
-
 drawSystem();
-</script>
 
+</script>
 </body>
 </html>
