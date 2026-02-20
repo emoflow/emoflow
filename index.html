@@ -385,43 +385,63 @@ function drawSystem(){
 
   mapCtx.setLineDash([]);
 
-  territories.forEach(ter=>{
+ territories.forEach(ter=>{
 
-    const radius = 3 + ter.iset*4;
+  const baseRadius = 3 + ter.iset*4;
 
-    // Halo proporcional a IRET
-    if(ter.iret > 0.4){
-      const pulse = Math.sin(t*0.12)*2;
+  // ===== NÚCLEO =====
+  mapCtx.beginPath();
+  mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
+  mapCtx.fillStyle="#ffffff";
+  mapCtx.fill();
+
+  // ===== CAPAS DE RESONANCIA =====
+  if(ter.iret > 0.3){
+
+    const layers = 3;
+
+    for(let i=1;i<=layers;i++){
+
+      const pulse =
+        Math.sin(t*0.08 + i)*2;
+
+      const expansion =
+        (i*12) +
+        (pulse * ter.iret * 2);
+
+      const alpha =
+        (0.18 * ter.iret) / i;
+
       mapCtx.beginPath();
       mapCtx.arc(
         ter.x,
         ter.y,
-        radius + 8 + pulse*ter.iret,
+        baseRadius + expansion,
         0,
         Math.PI*2
       );
-      mapCtx.strokeStyle=
-        "rgba(255,255,255,"+(0.2*ter.iret)+")";
+
+      mapCtx.strokeStyle =
+        "rgba(255,255,255,"+alpha+")";
+
+      mapCtx.lineWidth = 1;
       mapCtx.stroke();
     }
+  }
 
-    mapCtx.beginPath();
-    mapCtx.arc(ter.x,ter.y,radius,0,Math.PI*2);
-    mapCtx.fillStyle="#ffffff";
-    mapCtx.fill();
+  // ===== TEXTO =====
+  mapCtx.font="11px monospace";
+  mapCtx.fillStyle="rgba(255,255,255,0.6)";
+  mapCtx.textAlign="center";
+  mapCtx.fillText(ter.name,ter.x,ter.y+18);
 
-    mapCtx.font="11px monospace";
-    mapCtx.fillStyle="rgba(255,255,255,0.6)";
-    mapCtx.textAlign="center";
-    mapCtx.fillText(ter.name,ter.x,ter.y+18);
+  mapCtx.fillStyle="rgba(255,255,255,0.45)";
+  mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
 
-    mapCtx.fillStyle="rgba(255,255,255,0.45)";
-    mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+  mapCtx.fillStyle="rgba(255,255,255,0.35)";
+  mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
 
-    mapCtx.fillStyle="rgba(255,255,255,0.35)";
-    mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
-  });
-
+});
   t++;
   requestAnimationFrame(drawSystem);
 }
