@@ -208,16 +208,167 @@ ter.iret=clamp((0.65*proximity)+(0.35*ter.velocity*6));
 }
 
 function drawSystem(){
+
 mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
 updateTerritories();
 
-territories.forEach(ter=>{
-const r=3+ter.iset*4;
+const spacing = 24;
+const systemicStress = territories.some(t=>t.iret > 0.9);
+
+/* ===== CAMPO TERRITORIAL ===== */
+for(let y=0;y<=mapCanvas.height;y+=spacing){
+
 mapCtx.beginPath();
-mapCtx.arc(ter.x,ter.y,r,0,Math.PI*2);
-mapCtx.fillStyle="#fff";
-mapCtx.fill();
+
+for(let x=0;x<=mapCanvas.width;x++){
+
+let baseField = Math.sin(x*0.006 + y*0.002);
+let deformation = 0;
+
+territories.forEach(ter=>{
+const dx = x-ter.x;
+const dy = y-ter.y;
+const dist = Math.sqrt(dx*dx+dy*dy);
+deformation += (ter.iset*55) * Math.exp(-dist*0.012);
 });
+
+let instability = 0;
+territories.forEach(ter=>{
+if(ter.iret > 0.6){
+const dx = x-ter.x;
+const dy = y-ter.y;
+const dist = Math.sqrt(dx*dx+dy*dy);
+instability += Math.sin(dist*0.08 + t*0.15) *
+ter.iret * 6 *
+Math.exp(-dist*0.02);
+}
+});
+
+let systemicDistortion = 0;
+if(systemicStress){
+systemicDistortion =
+Math.sin(x*0.01 + t*0.08) * 6;
+}
+
+const finalY =
+y +
+baseField*4 +
+deformation*0.025 +
+instability +
+systemicDistortion;
+
+if(x===0) mapCtx.moveTo(x,finalY);
+else mapCtx.lineTo(x,finalY);
+}
+
+mapCtx.strokeStyle="rgba(255,255,255,0.07)";
+mapCtx.stroke();
+}
+
+/* ===== CONEXIONES ===== */
+territories.forEach((a,i)=>{
+territories.forEach((b,j)=>{
+if(i<j){
+
+const interaction = Math.abs(a.iset-b.iset);
+let alpha = 0.05 + interaction*0.2;
+
+if(a.iret>0.8 && b.iret>0.8){
+mapCtx.setLineDash([2,4]);
+alpha += 0.1;
+}else{
+mapCtx.setLineDash([]);
+}
+
+mapCtx.beginPath();
+mapCtx.moveTo(a.x,a.y);
+mapCtx.lineTo(b.x,b.y);
+mapCtx.strokeStyle="rgba(255,255,255,"+alpha+")";
+mapCtx.stroke();
+}
+});
+});
+
+mapCtx.setLineDash([]);
+
+/* ===== TERRITORIOS ===== */
+territories.forEach(ter=>{
+
+const baseRadius = 3 + ter.iset*4;
+
+/* NÚCLEO */
+mapCtx.beginPath();
+mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
+mapCtx.fillStyle="#ffffff";
+mapCtx.fill();
+
+/* HALOS MULTICAPA */
+if(ter.iret > 0.3){
+
+const layers = 3;
+
+for(let i=1;i<=layers;i++){
+
+const pulse =
+Math.sin(t*0.08 + i)*2;
+
+const expansion =
+(i*12) + (pulse * ter.iret * 2);
+
+const alpha =
+(0.18 * ter.iret) / i;
+
+const segments = 60;
+
+mapCtx.beginPath();
+
+for(let a=0; a<=segments; a++){
+
+const angle = (a/segments)*Math.PI*2;
+
+let distortion = 0;
+
+if(ter.iret > 0.85){
+distortion =
+Math.sin(angle*4 + t*0.2) *
+ter.iret * 4;
+}
+
+const rx = (baseRadius + expansion + distortion);
+const ry = (baseRadius + expansion - distortion*0.4);
+
+const x = ter.x + Math.cos(angle)*rx;
+const y = ter.y + Math.sin(angle)*ry;
+
+if(a===0) mapCtx.moveTo(x,y);
+else mapCtx.lineTo(x,y);
+}
+
+mapCtx.strokeStyle =
+"rgba(255,255,255,"+alpha+")";
+
+mapCtx.lineWidth = 1;
+mapCtx.stroke();
+}
+}
+
+/* TEXTO */
+mapCtx.font="11px monospace";
+mapCtx.fillStyle="rgba(255,255,255,0.6)";
+mapCtx.textAlign="center";
+mapCtx.fillText(ter.name,ter.x,ter.y+18);
+
+mapCtx.fillStyle="rgba(255,255,255,0.45)";
+mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+
+mapCtx.fillStyle="rgba(255,255,255,0.35)";
+mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
+
+});
+
+t++;
+requestAnimationFrame(drawSystem);
+}
 
 t++;
 requestAnimationFrame(drawSystem);
