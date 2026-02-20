@@ -266,29 +266,63 @@ const territories = [
 
 function clamp(v){ return Math.max(0,Math.min(v,1)); }
 
-function updateTerritories(){
+territories.forEach(ter=>{
 
-  territories.forEach((ter,i)=>{
+  const baseRadius = 3 + ter.iset*4;
 
-    let base = 0.6 + 0.6*Math.sin(t*0.02 + i);
+  // ===== NÚCLEO =====
+  mapCtx.beginPath();
+  mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
+  mapCtx.fillStyle="#ffffff";
+  mapCtx.fill();
 
-    territories.forEach((other,j)=>{
-      if(i !== j){
-        const dx = ter.x - other.x;
-        const dy = ter.y - other.y;
-        const dist = Math.sqrt(dx*dx+dy*dy);
-        base += other.iset * Math.exp(-dist*0.008) * 0.08;
-      }
-    });
+  // ===== CAPAS DE RESONANCIA =====
+  if(ter.iret > 0.3){
 
-    ter.prev = ter.iset;
-    ter.iset = Math.min(base,1.6);
+    const layers = 3;
 
-    const velocity = ter.iset - ter.prev;
-    const proximity = ter.iset / 1.3;
+    for(let i=1;i<=layers;i++){
 
-    ter.iret = clamp((0.65*proximity) + (0.35*velocity*6));
-  });
+      const pulse =
+        Math.sin(t*0.08 + i)*2;
+
+      const expansion =
+        (i*12) +
+        (pulse * ter.iret * 2);
+
+      const alpha =
+        (0.18 * ter.iret) / i;
+
+      mapCtx.beginPath();
+      mapCtx.arc(
+        ter.x,
+        ter.y,
+        baseRadius + expansion,
+        0,
+        Math.PI*2
+      );
+
+      mapCtx.strokeStyle =
+        "rgba(255,255,255,"+alpha+")";
+
+      mapCtx.lineWidth = 1;
+      mapCtx.stroke();
+    }
+  }
+
+  // ===== TEXTO =====
+  mapCtx.font="11px monospace";
+  mapCtx.fillStyle="rgba(255,255,255,0.6)";
+  mapCtx.textAlign="center";
+  mapCtx.fillText(ter.name,ter.x,ter.y+18);
+
+  mapCtx.fillStyle="rgba(255,255,255,0.45)";
+  mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+
+  mapCtx.fillStyle="rgba(255,255,255,0.35)";
+  mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
+
+});
 }
 
 function drawSystem(){
