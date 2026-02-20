@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMOFLOW</title>
+
+<style>
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+.boot-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: bootFade 1.8s ease forwards;
+}
+
+.boot-text {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #888;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes bootFade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.container { max-width: 900px; }
+
+h1 {
+  font-size: 48px;
+  letter-spacing: 8px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: titleReveal 1.2s ease forwards;
+  animation-delay: 1.2s;
+}
+
+@keyframes titleReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+  font-size: 22px;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  color: #ccc;
+  font-weight: 500;
+}
+
+p { font-size: 16px; line-height: 1.8; color: #aaa; }
+
+.small { font-size: 14px; color: #666; margin-top: 40px; }
+
+.fade {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1.2s ease;
+}
+
+.fade.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+canvas {
+  width: 100%;
+  max-width: 700px;
+  height: 320px;
+  margin-top: 40px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="boot-overlay">
+  <div class="boot-text">INITIALIZING EMOTIONAL FIELD MODEL...</div>
+</div>
+
+<section>
+  <div class="container fade">
+    <h1>EMOFLOW</h1>
+    <h2>Inteligencia Emocional Territorial</h2>
+    <p>
+      Modelización de Flujos Emocionales <br>
+      Evaluación de Riesgo Sistémico<br>
+      Anticipación de Saturación Emocional Social
+    </p>
+    <p class="small">emoflow@proton.me</p>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>ISET — Dinámica Acumulativa</h2>
+    <p>
+      El flujo incrementa el stock emocional.
+      La disipación reduce acumulación.
+      El umbral determina transición crítica.
+    </p>
+    <canvas id="graph"></canvas>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>ISET</h2>
+    <p>
+      Índice de Saturación Emocional Territorial.
+      Cuantifica acumulación afectiva en un espacio geográfico
+      considerando intensidad de eventos, persistencia temporal
+      y sensibilidad estructural.
+    </p>
+    <canvas id="isetConcept"></canvas>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>IRET</h2>
+    <p>
+      Índice de Riesgo Emocional Territorial.
+      Estima probabilidad de fractura sistémica
+      en función de velocidad de incremento,
+      proximidad al umbral crítico y variabilidad estructural.
+    </p>
+    <canvas id="iretConcept"></canvas>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>Arquitectura Analítica</h2>
+    <p>
+      Lógica stock–flow.<br>
+      Mapas de impacto emocional.<br>
+      Sensibilidad estructural.<br>
+      Modelización dinámica territorial.
+    </p>
+    <canvas id="impactMap"></canvas>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>Nuestro Principio</h2>
+    <p>
+      EMOFLOW no reacciona a la crisis.<br>
+      La detecta en fase latente.
+    </p>
+    <p>
+      No interpreta discursos.<br>
+      Mide acumulaciones estructurales.
+    </p>
+  </div>
+</section>
+
+<script>
+
+/* FADE */
+const fades = document.querySelectorAll('.fade');
+function checkVisibility() {
+  const trigger = window.innerHeight * 0.85;
+  fades.forEach(fade => {
+    const top = fade.getBoundingClientRect().top;
+    if (top < trigger) fade.classList.add('visible');
+  });
+}
+window.addEventListener('scroll', checkVisibility);
+window.addEventListener('load', checkVisibility);
+
+/* ISET PRINCIPAL */
+
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+canvas.width = 700;
+canvas.height = 300;
+
+let stock = 0;
+let time = 0;
+const threshold = 220;
+
+function drawISET() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height - threshold);
+  ctx.lineTo(canvas.width, canvas.height - threshold);
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  ctx.setLineDash([6,6]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle="rgba(255,255,255,0.5)";
+  ctx.font="12px monospace";
+  ctx.fillText("CRITICAL", 10, canvas.height - threshold - 5);
+
+  stock += (Math.sin(time*0.05)*2 + 2);
+  stock *= 0.99;
+
+  const y = canvas.height - stock;
+
+  ctx.strokeStyle = stock > threshold ? "#ffffff" : "rgba(255,255,255,0.6)";
+
+  ctx.beginPath();
+  ctx.moveTo(time, y);
+  ctx.lineTo(time+1, y);
+  ctx.stroke();
+
+  time++;
+  if(time > canvas.width){
+    time = 0;
+    stock = 0;
+  }
+
+  requestAnimationFrame(drawISET);
+}
+
+drawISET();
+
+/* =========================
+   CAMPO TERRITORIAL REACTIVO EMOFLOW
+========================= */
+
+const mapCanvas = document.getElementById('impactMap');
+const mapCtx = mapCanvas.getContext('2d');
+mapCanvas.width = 700;
+mapCanvas.height = 300;
+
+let t = 0;
+
+const territories = [
+  {x:120,y:90,name:"Norte Urbano",iset:0,prev:0,iret:0},
+  {x:350,y:70,name:"Centro Cívico",iset:0,prev:0,iret:0},
+  {x:560,y:120,name:"Periferia Este",iset:0,prev:0,iret:0},
+  {x:450,y:220,name:"Nodo Industrial",iset:0,prev:0,iret:0},
+  {x:200,y:210,name:"Zona Residencial",iset:0,prev:0,iret:0}
+];
+
+function clamp(v){ return Math.max(0,Math.min(v,1)); }
+
+function updateTerritories(){
+
+  territories.forEach((ter,i)=>{
+
+    let base = 0.6 + 0.6*Math.sin(t*0.02 + i);
+
+    territories.forEach((other,j)=>{
+      if(i !== j){
+        const dx = ter.x - other.x;
+        const dy = ter.y - other.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        base += other.iset * Math.exp(-dist*0.008) * 0.08;
+      }
+    });
+
+    ter.prev = ter.iset;
+    ter.iset = Math.min(base,1.6);
+
+    const velocity = ter.iset - ter.prev;
+    const proximity = ter.iset / 1.3;
+
+    ter.iret = clamp((0.65*proximity) + (0.35*velocity*6));
+  });
+}
+
+function drawSystem(){
+
+  mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
+
+  updateTerritories();
+
+  const spacing = 24;
+
+  const systemicStress = territories.some(t=>t.iret > 0.9);
+
+  for(let y=0;y<=mapCanvas.height;y+=spacing){
+
+    mapCtx.beginPath();
+
+    for(let x=0;x<=mapCanvas.width;x++){
+
+      let baseField =
+        Math.sin(x*0.006 + y*0.002);
+
+      let deformation = 0;
+
+      territories.forEach(ter=>{
+        const dx = x-ter.x;
+        const dy = y-ter.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+
+        // ISET fuerte y más amplio
+        deformation +=
+          (ter.iset*55) *
+          Math.exp(-dist*0.012);
+      });
+
+      // IRET introduce irregularidad dinámica
+      let instability = 0;
+      territories.forEach(ter=>{
+        if(ter.iret > 0.6){
+          const dx = x-ter.x;
+          const dy = y-ter.y;
+          const dist = Math.sqrt(dx*dx+dy*dy);
+          instability +=
+            Math.sin(dist*0.08 + t*0.15) *
+            ter.iret *
+            6 *
+            Math.exp(-dist*0.02);
+        }
+      });
+
+      // Si hay estrés sistémico → altera campo global
+      let systemicDistortion = 0;
+      if(systemicStress){
+        systemicDistortion =
+          Math.sin(x*0.01 + t*0.08) * 6;
+      }
+
+      const finalY =
+        y +
+        baseField*4 +
+        deformation*0.025 +
+        instability +
+        systemicDistortion;
+
+      if(x===0) mapCtx.moveTo(x,finalY);
+      else mapCtx.lineTo(x,finalY);
+    }
+
+    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
+    mapCtx.stroke();
+  }
+
+  // conexiones
+  territories.forEach((a,i)=>{
+    territories.forEach((b,j)=>{
+      if(i<j){
+        const interaction = Math.abs(a.iset-b.iset);
+        let alpha = 0.05 + interaction*0.2;
+
+        if(a.iret>0.8 && b.iret>0.8){
+          mapCtx.setLineDash([2,4]);
+          alpha += 0.1;
+        } else {
+          mapCtx.setLineDash([]);
+        }
+
+        mapCtx.beginPath();
+        mapCtx.moveTo(a.x,a.y);
+        mapCtx.lineTo(b.x,b.y);
+        mapCtx.strokeStyle="rgba(255,255,255,"+alpha+")";
+        mapCtx.stroke();
+      }
+    });
+  });
+
+  mapCtx.setLineDash([]);
+
+ territories.forEach(ter=>{
+
+  const baseRadius = 3 + ter.iset*4;
+
+  // ===== NÚCLEO =====
+  mapCtx.beginPath();
+  mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
+  mapCtx.fillStyle="#ffffff";
+  mapCtx.fill();
+
+  // ===== CAPAS DE RESONANCIA AVANZADA =====
+  if(ter.iret > 0.3){
+
+    const layers = 3;
+
+    for(let i=1;i<=layers;i++){
+
+      const pulse =
+        Math.sin(t*0.08 + i)*2;
+
+      const expansion =
+        (i*12) +
+        (pulse * ter.iret * 2);
+
+      const alpha =
+        (0.18 * ter.iret) / i;
+
+      const segments = 60;
+
+      mapCtx.beginPath();
+
+      for(let a=0; a<=segments; a++){
+
+        const angle = (a/segments)*Math.PI*2;
+
+        // si riesgo crítico → pierde simetría
+        let distortion = 0;
+
+        if(ter.iret > 0.85){
+          distortion =
+            Math.sin(angle*4 + t*0.2) *
+            ter.iret *
+            4;
+        }
+
+        const rx =
+          (baseRadius + expansion + distortion);
+
+        const ry =
+          (baseRadius + expansion - distortion*0.4);
+
+        const x =
+          ter.x + Math.cos(angle)*rx;
+
+        const y =
+          ter.y + Math.sin(angle)*ry;
+
+        if(a===0) mapCtx.moveTo(x,y);
+        else mapCtx.lineTo(x,y);
+      }
+
+      mapCtx.strokeStyle =
+        "rgba(255,255,255,"+alpha+")";
+
+      mapCtx.lineWidth = 1;
+      mapCtx.stroke();
+    }
+  }
+
+  // ===== TEXTO =====
+  mapCtx.font="11px monospace";
+  mapCtx.fillStyle="rgba(255,255,255,0.6)";
+  mapCtx.textAlign="center";
+  mapCtx.fillText(ter.name,ter.x,ter.y+18);
+
+  mapCtx.fillStyle="rgba(255,255,255,0.45)";
+  mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+
+  mapCtx.fillStyle="rgba(255,255,255,0.35)";
+  mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
+
+});
+  t++;
+  requestAnimationFrame(drawSystem);
+}
+
+drawSystem();
+
+  /* =========================
+   ISET CONCEPTUAL
+========================= */
+
+const isetCanvas = document.getElementById('isetConcept');
+const isetCtx = isetCanvas.getContext('2d');
+isetCanvas.width = 700;
+isetCanvas.height = 260;
+
+function drawISETConcept(){
+
+  isetCtx.clearRect(0,0,isetCanvas.width,isetCanvas.height);
+
+  const w = isetCanvas.width;
+  const h = isetCanvas.height;
+
+  const margin = 60;
+
+  // Ejes
+  isetCtx.beginPath();
+  isetCtx.moveTo(margin, margin);
+  isetCtx.lineTo(margin, h-margin);
+  isetCtx.lineTo(w-margin, h-margin);
+  isetCtx.strokeStyle="rgba(255,255,255,0.4)";
+  isetCtx.stroke();
+
+  isetCtx.font="12px monospace";
+  isetCtx.fillStyle="rgba(255,255,255,0.6)";
+  isetCtx.fillText("Stock", margin-40, margin-10);
+  isetCtx.fillText("Tiempo", w-margin+10, h-margin+20);
+
+  // Curva acumulativa
+  isetCtx.beginPath();
+
+  for(let x=0; x<=w-margin*2; x++){
+
+    const time = x*0.02;
+    const stock =
+      (1-Math.exp(-time)) *
+      (h-margin*2);
+
+    const y =
+      (h-margin) - stock;
+
+    if(x===0)
+      isetCtx.moveTo(margin+x,y);
+    else
+      isetCtx.lineTo(margin+x,y);
+  }
+
+  isetCtx.strokeStyle="rgba(255,255,255,0.8)";
+  isetCtx.stroke();
+
+  // Umbral
+  const thresholdY = margin + 40;
+
+  isetCtx.beginPath();
+  isetCtx.moveTo(margin, thresholdY);
+  isetCtx.lineTo(w-margin, thresholdY);
+  isetCtx.setLineDash([6,6]);
+  isetCtx.strokeStyle="rgba(255,255,255,0.3)";
+  isetCtx.stroke();
+  isetCtx.setLineDash([]);
+
+  isetCtx.fillStyle="rgba(255,255,255,0.5)";
+  isetCtx.fillText("UMBRAL", margin+10, thresholdY-5);
+
+}
+
+drawISETConcept();
+
+
+/* =========================
+   IRET CONCEPTUAL
+========================= */
+
+const iretCanvas = document.getElementById('iretConcept');
+const iretCtx = iretCanvas.getContext('2d');
+iretCanvas.width = 700;
+iretCanvas.height = 260;
+
+function drawIRETConcept(){
+
+  iretCtx.clearRect(0,0,iretCanvas.width,iretCanvas.height);
+
+  const w = iretCanvas.width;
+  const h = iretCanvas.height;
+  const margin = 60;
+
+  // Ejes
+  iretCtx.beginPath();
+  iretCtx.moveTo(margin, margin);
+  iretCtx.lineTo(margin, h-margin);
+  iretCtx.lineTo(w-margin, h-margin);
+  iretCtx.strokeStyle="rgba(255,255,255,0.4)";
+  iretCtx.stroke();
+
+  iretCtx.font="12px monospace";
+  iretCtx.fillStyle="rgba(255,255,255,0.6)";
+  iretCtx.fillText("Velocidad (dISET/dt)", margin-60, margin-10);
+  iretCtx.fillText("ISET", w-margin+10, h-margin+20);
+
+  // Curva de riesgo
+  iretCtx.beginPath();
+
+  for(let x=0; x<=w-margin*2; x++){
+
+    const iset = x/(w-margin*2);
+
+    const velocity = iset;
+
+    const risk =
+      (0.6*iset) +
+      (0.4*velocity);
+
+    const y =
+      (h-margin) -
+      risk*(h-margin*2);
+
+    if(x===0)
+      iretCtx.moveTo(margin+x,y);
+    else
+      iretCtx.lineTo(margin+x,y);
+  }
+
+  iretCtx.strokeStyle="rgba(255,255,255,0.8)";
+  iretCtx.stroke();
+
+  // Zona crítica
+  const criticalY = margin + 30;
+
+  iretCtx.beginPath();
+  iretCtx.moveTo(margin, criticalY);
+  iretCtx.lineTo(w-margin, criticalY);
+  iretCtx.setLineDash([6,6]);
+  iretCtx.strokeStyle="rgba(255,255,255,0.3)";
+  iretCtx.stroke();
+  iretCtx.setLineDash([]);
+
+  iretCtx.fillStyle="rgba(255,255,255,0.5)";
+  iretCtx.fillText("RIESGO CRÍTICO", margin+10, criticalY-5);
+
+}
+
+drawIRETConcept();
+</script>
+
+</body>
+</html>
