@@ -58,8 +58,6 @@ h1 {
   font-size: 48px;
   letter-spacing: 8px;
   font-weight: 600;
-  position: relative;
-  display: inline-block;
   opacity: 0;
   transform: translateY(10px);
   animation: titleReveal 1.2s ease forwards;
@@ -205,7 +203,9 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
-/* ISET DINÁMICO */
+/* =========================
+   ISET DINÁMICO
+========================= */
 
 const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
@@ -217,6 +217,7 @@ let time = 0;
 const threshold = 220;
 
 function drawISET() {
+
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   ctx.beginPath();
@@ -231,24 +232,19 @@ function drawISET() {
   ctx.font="12px monospace";
   ctx.fillText("CRITICAL", 10, canvas.height - threshold - 5);
 
-  ctx.beginPath();
-
   stock += (Math.sin(time*0.05)*2 + 2);
   stock *= 0.99;
 
   const y = canvas.height - stock;
 
-  if(stock > threshold){
-    ctx.strokeStyle="rgba(255,255,255,1)";
-  } else {
-    ctx.strokeStyle="rgba(255,255,255,0.6)";
-  }
+  ctx.strokeStyle = stock > threshold ? "#ffffff" : "rgba(255,255,255,0.6)";
 
+  ctx.beginPath();
   ctx.moveTo(time, y);
   ctx.lineTo(time+1, y);
   ctx.stroke();
 
-  time += 1;
+  time++;
   if(time > canvas.width){
     time = 0;
     stock = 0;
@@ -258,6 +254,123 @@ function drawISET() {
 }
 
 drawISET();
+
+/* =========================
+   MAPA TERRITORIAL SISTÉMICO
+========================= */
+
+const mapCanvas = document.getElementById('impactMap');
+const mapCtx = mapCanvas.getContext('2d');
+mapCanvas.width = 700;
+mapCanvas.height = 300;
+
+let t = 0;
+
+const territories = [
+  {x:120,y:90,name:"Norte Urbano",iset:0},
+  {x:350,y:70,name:"Centro Cívico",iset:0},
+  {x:560,y:120,name:"Periferia Este",iset:0},
+  {x:450,y:220,name:"Nodo Industrial",iset:0},
+  {x:200,y:210,name:"Zona Residencial",iset:0}
+];
+
+function updateISET() {
+
+  territories.forEach((ter,i)=>{
+    let base = 0.5 + 0.5*Math.sin(t*0.02 + i);
+
+    territories.forEach((other,j)=>{
+      if(i !== j){
+        const dx = ter.x - other.x;
+        const dy = ter.y - other.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        base += other.iset * Math.exp(-dist*0.01) * 0.05;
+      }
+    });
+
+    ter.iset = Math.min(base,1.5);
+  });
+}
+
+function drawAdvancedMap() {
+
+  mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
+
+  updateISET();
+
+  const spacing = 28;
+
+  for(let y=0;y<=mapCanvas.height;y+=spacing){
+
+    mapCtx.beginPath();
+
+    for(let x=0;x<=mapCanvas.width;x++){
+
+      let structuralGradient = Math.sin(x*0.005) * 5;
+
+      let offset = 0;
+
+      territories.forEach(ter=>{
+        const dx = x-ter.x;
+        const dy = y-ter.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        offset += (ter.iset*35) * Math.exp(-dist*0.02);
+      });
+
+      const finalY = y + structuralGradient + offset*0.02;
+
+      if(x===0) mapCtx.moveTo(x,finalY);
+      else mapCtx.lineTo(x,finalY);
+    }
+
+    mapCtx.strokeStyle="rgba(255,255,255,0.06)";
+    mapCtx.stroke();
+  }
+
+  territories.forEach((a,i)=>{
+    territories.forEach((b,j)=>{
+      if(i<j){
+        const interaction = Math.abs(a.iset-b.iset);
+        const alpha = 0.04 + interaction*0.15;
+
+        mapCtx.beginPath();
+        mapCtx.moveTo(a.x,a.y);
+        mapCtx.lineTo(b.x,b.y);
+        mapCtx.strokeStyle="rgba(255,255,255,"+alpha+")";
+        mapCtx.stroke();
+      }
+    });
+  });
+
+  territories.forEach(ter=>{
+    const radius = 3 + ter.iset*4;
+
+    if(ter.iset > 1.2){
+      mapCtx.beginPath();
+      mapCtx.arc(ter.x,ter.y,radius+6,0,Math.PI*2);
+      mapCtx.strokeStyle="rgba(255,255,255,0.2)";
+      mapCtx.stroke();
+    }
+
+    mapCtx.beginPath();
+    mapCtx.arc(ter.x,ter.y,radius,0,Math.PI*2);
+    mapCtx.fillStyle="#ffffff";
+    mapCtx.fill();
+
+    mapCtx.font="11px monospace";
+    mapCtx.fillStyle="rgba(255,255,255,0.6)";
+    mapCtx.textAlign="center";
+    mapCtx.fillText(ter.name,ter.x,ter.y+18);
+
+    mapCtx.fillStyle="rgba(255,255,255,0.4)";
+    mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+  });
+
+  t++;
+  requestAnimationFrame(drawAdvancedMap);
+}
+
+drawAdvancedMap();
 
 </script>
 
