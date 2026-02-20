@@ -106,7 +106,6 @@ canvas {
   <div class="boot-text">INITIALIZING EMOTIONAL FIELD MODEL...</div>
 </div>
 
-<!-- LANDING -->
 <section>
   <div class="container fade">
     <h1>EMOFLOW</h1>
@@ -120,7 +119,6 @@ canvas {
   </div>
 </section>
 
-<!-- ISET DINÁMICO -->
 <section>
   <div class="container fade">
     <h2>ISET — Dinámica Acumulativa</h2>
@@ -133,7 +131,6 @@ canvas {
   </div>
 </section>
 
-<!-- ISET TEXTO -->
 <section>
   <div class="container fade">
     <h2>ISET</h2>
@@ -146,7 +143,6 @@ canvas {
   </div>
 </section>
 
-<!-- IRET -->
 <section>
   <div class="container fade">
     <h2>IRET</h2>
@@ -156,11 +152,9 @@ canvas {
       en función de velocidad de incremento,
       proximidad al umbral crítico y variabilidad estructural.
     </p>
-    <canvas id="iretGraph"></canvas>
   </div>
 </section>
 
-<!-- MAPA -->
 <section>
   <div class="container fade">
     <h2>Arquitectura Analítica</h2>
@@ -174,7 +168,6 @@ canvas {
   </div>
 </section>
 
-<!-- CIERRE -->
 <section>
   <div class="container fade">
     <h2>Nuestro Principio</h2>
@@ -203,9 +196,7 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
-/* =========================
-   ISET DINÁMICO
-========================= */
+/* ISET PRINCIPAL */
 
 const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
@@ -217,7 +208,6 @@ let time = 0;
 const threshold = 220;
 
 function drawISET() {
-
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   ctx.beginPath();
@@ -256,7 +246,7 @@ function drawISET() {
 drawISET();
 
 /* =========================
-   MAPA TERRITORIAL SISTÉMICO
+   MAPA SISTÉMICO CON IRET
 ========================= */
 
 const mapCanvas = document.getElementById('impactMap');
@@ -267,16 +257,19 @@ mapCanvas.height = 300;
 let t = 0;
 
 const territories = [
-  {x:120,y:90,name:"Norte Urbano",iset:0},
-  {x:350,y:70,name:"Centro Cívico",iset:0},
-  {x:560,y:120,name:"Periferia Este",iset:0},
-  {x:450,y:220,name:"Nodo Industrial",iset:0},
-  {x:200,y:210,name:"Zona Residencial",iset:0}
+  {x:120,y:90,name:"Norte Urbano",iset:0,prev:0,iret:0},
+  {x:350,y:70,name:"Centro Cívico",iset:0,prev:0,iret:0},
+  {x:560,y:120,name:"Periferia Este",iset:0,prev:0,iret:0},
+  {x:450,y:220,name:"Nodo Industrial",iset:0,prev:0,iret:0},
+  {x:200,y:210,name:"Zona Residencial",iset:0,prev:0,iret:0}
 ];
 
-function updateISET() {
+function clamp(v){ return Math.max(0,Math.min(v,1)); }
+
+function updateTerritories(){
 
   territories.forEach((ter,i)=>{
+
     let base = 0.5 + 0.5*Math.sin(t*0.02 + i);
 
     territories.forEach((other,j)=>{
@@ -288,17 +281,24 @@ function updateISET() {
       }
     });
 
+    ter.prev = ter.iset;
     ter.iset = Math.min(base,1.5);
+
+    const velocity = ter.iset - ter.prev;
+    const proximity = ter.iset / 1.2;
+
+    ter.iret = clamp((0.6*proximity) + (0.4*velocity*5));
   });
 }
 
-function drawAdvancedMap() {
+function drawSystem(){
 
   mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
 
-  updateISET();
+  updateTerritories();
 
   const spacing = 28;
+  let systemicStress = territories.some(t=>t.iret > 0.85);
 
   for(let y=0;y<=mapCanvas.height;y+=spacing){
 
@@ -306,7 +306,7 @@ function drawAdvancedMap() {
 
     for(let x=0;x<=mapCanvas.width;x++){
 
-      let structuralGradient = Math.sin(x*0.005) * 5;
+      let structuralGradient = Math.sin(x*0.005 + (systemicStress? t*0.02 : 0)) * 5;
 
       let offset = 0;
 
@@ -331,7 +331,14 @@ function drawAdvancedMap() {
     territories.forEach((b,j)=>{
       if(i<j){
         const interaction = Math.abs(a.iset-b.iset);
-        const alpha = 0.04 + interaction*0.15;
+        let alpha = 0.04 + interaction*0.15;
+
+        if(a.iret>0.8 && b.iret>0.8){
+          alpha += 0.1;
+          mapCtx.setLineDash([2,4]);
+        } else {
+          mapCtx.setLineDash([]);
+        }
 
         mapCtx.beginPath();
         mapCtx.moveTo(a.x,a.y);
@@ -342,13 +349,17 @@ function drawAdvancedMap() {
     });
   });
 
+  mapCtx.setLineDash([]);
+
   territories.forEach(ter=>{
+
     const radius = 3 + ter.iset*4;
 
-    if(ter.iset > 1.2){
+    if(ter.iret > 0.4){
+      const pulse = Math.sin(t*0.1)*2;
       mapCtx.beginPath();
-      mapCtx.arc(ter.x,ter.y,radius+6,0,Math.PI*2);
-      mapCtx.strokeStyle="rgba(255,255,255,0.2)";
+      mapCtx.arc(ter.x,ter.y,radius + 6 + pulse*ter.iret,0,Math.PI*2);
+      mapCtx.strokeStyle="rgba(255,255,255,"+(0.15*ter.iret)+")";
       mapCtx.stroke();
     }
 
@@ -364,13 +375,16 @@ function drawAdvancedMap() {
 
     mapCtx.fillStyle="rgba(255,255,255,0.4)";
     mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
+
+    mapCtx.fillStyle="rgba(255,255,255,0.35)";
+    mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
   });
 
   t++;
-  requestAnimationFrame(drawAdvancedMap);
+  requestAnimationFrame(drawSystem);
 }
 
-drawAdvancedMap();
+drawSystem();
 
 </script>
 
