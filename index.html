@@ -1,74 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>EMOFLOW</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      margin: 0;
-      background-color: #000000;
-      color: #FFFFFF;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMOFLOW</title>
 
-    .container {
-      max-width: 700px;
-      padding: 40px;
-    }
+<style>
+body {
+  margin: 0;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
 
-    h1 {
-      font-size: 32px;
-      letter-spacing: 4px;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
+section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+}
 
-    p {
-      font-size: 15px;
-      line-height: 1.8;
-      margin: 10px 0;
-      color: #CCCCCC;
-    }
+.container {
+  max-width: 800px;
+}
 
-    .contact {
-      margin-top: 40px;
-      font-size: 14px;
-      color: #888888;
-    }
+h1 {
+  font-size: 40px;
+  letter-spacing: 6px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
 
-    a {
-      color: #FFFFFF;
-      text-decoration: none;
-      border-bottom: 1px solid #444444;
-    }
+h2 {
+  font-size: 22px;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  color: #ccc;
+  font-weight: 500;
+}
 
-    a:hover {
-      border-bottom: 1px solid #FFFFFF;
-    }
-  </style>
+p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #aaa;
+}
+
+.small {
+  font-size: 14px;
+  color: #666;
+  margin-top: 30px;
+}
+
+.fade {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1.2s ease;
+}
+
+.fade.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+  border-bottom: 1px solid #444;
+}
+
+a:hover {
+  border-bottom: 1px solid #fff;
+}
+</style>
 </head>
+
 <body>
-  <div class="container">
+
+<section>
+  <div class="container fade">
     <h1>EMOFLOW</h1>
-
-    <p>Inteligencia Emocional Territorial</p>
-
+    <h2>Inteligencia Emocional Territorial</h2>
     <p>
       Modelización de Flujos Emocionales Colectivos<br>
       Evaluación de Riesgo Sistémico<br>
       Anticipación de Saturación Emocional Social
     </p>
-
-    <div class="contact">
-      Contacto<br>
+    <p class="small">
       <a href="mailto:emoflow@proton.me">emoflow@proton.me</a>
-    </div>
+    </p>
   </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>ISET</h2>
+    <p>
+      Índice de Saturación Emocional Territorial.
+      Mide la acumulación de tensión afectiva en un espacio geográfico
+      determinado, considerando densidad poblacional, intensidad de eventos,
+      sensibilidad estructural y persistencia temporal.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>IRET</h2>
+    <p>
+      Índice de Riesgo Emocional Territorial.
+      Evalúa la probabilidad de fractura sistémica derivada
+      de la saturación emocional acumulada.
+      Integra variabilidad, velocidad de incremento y umbrales críticos.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>Stock–Flow Model</h2>
+    <p>
+      EMOFLOW opera bajo lógica stock–flow.
+      El stock representa la acumulación emocional.
+      El flow representa eventos, estímulos y tensiones.
+      La dinámica entre ambos determina estabilidad o colapso.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="container fade">
+    <h2>Arquitectura Analítica</h2>
+    <p>
+      Sensibilidad estructural.<br>
+      Mapas de impacto emocional.<br>
+      Simulación dinámica territorial.<br>
+      Detección anticipada de puntos críticos.
+    </p>
+  </div>
+</section>
+
+<script>
+const fades = document.querySelectorAll('.fade');
+
+function checkVisibility() {
+  const trigger = window.innerHeight * 0.85;
+  fades.forEach(fade => {
+    const top = fade.getBoundingClientRect().top;
+    if (top < trigger) {
+      fade.classList.add('visible');
+    }
+  });
+}
+
+window.addEventListener('scroll', checkVisibility);
+window.addEventListener('load', checkVisibility);
+</script>
+
 </body>
 </html>
