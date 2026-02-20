@@ -141,7 +141,7 @@ canvas {
       considerando intensidad de eventos, persistencia temporal
       y sensibilidad estructural.
     </p>
-     <canvas id="isetConcept"></canvas>
+    <canvas id="isetConcept"></canvas>
   </div>
 </section>
 
@@ -245,32 +245,25 @@ function drawISET() {
 
   requestAnimationFrame(drawISET);
 }
-
 drawISET();
 
 /* =========================
-   CAMPO TERRITORIAL REACTIVO EMOFLOW
+   TERRITORIOS
 ========================= */
-
-const mapCanvas = document.getElementById('impactMap');
-const mapCtx = mapCanvas.getContext('2d');
-mapCanvas.width = 700;
-mapCanvas.height = 300;
 
 let t = 0;
 
 const territories = [
-  {x:120,y:90,name:"Norte Urbano",iset:0,prev:0,iret:0},
-  {x:350,y:70,name:"Centro Cívico",iset:0,prev:0,iret:0},
-  {x:560,y:120,name:"Periferia Este",iset:0,prev:0,iret:0},
-  {x:450,y:220,name:"Nodo Industrial",iset:0,prev:0,iret:0},
-  {x:200,y:210,name:"Zona Residencial",iset:0,prev:0,iret:0}
+  {x:120,y:90,name:"Norte Urbano",iset:0,prev:0,iret:0,velocity:0},
+  {x:350,y:70,name:"Centro Cívico",iset:0,prev:0,iret:0,velocity:0},
+  {x:560,y:120,name:"Periferia Este",iset:0,prev:0,iret:0,velocity:0},
+  {x:450,y:220,name:"Nodo Industrial",iset:0,prev:0,iret:0,velocity:0},
+  {x:200,y:210,name:"Zona Residencial",iset:0,prev:0,iret:0,velocity:0}
 ];
 
 function clamp(v){ return Math.max(0,Math.min(v,1)); }
 
 function updateTerritories(){
-
   territories.forEach((ter,i)=>{
 
     let base = 0.6 + 0.6*Math.sin(t*0.02 + i);
@@ -287,347 +280,19 @@ function updateTerritories(){
     ter.prev = ter.iset;
     ter.iset = Math.min(base,1.6);
 
-    const velocity = ter.iset - ter.prev;
+    ter.velocity = ter.iset - ter.prev;
+
     const proximity = ter.iset / 1.3;
-
-    ter.iret = clamp((0.65*proximity) + (0.35*velocity*6));
+    ter.iret = clamp((0.65*proximity) + (0.35*ter.velocity*6));
   });
 }
-
-function drawSystem(){
-
-  mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
-
-  updateTerritories();
-
-  const spacing = 24;
-
-  const systemicStress = territories.some(t=>t.iret > 0.9);
-
-  for(let y=0;y<=mapCanvas.height;y+=spacing){
-
-    mapCtx.beginPath();
-
-    for(let x=0;x<=mapCanvas.width;x++){
-
-      let baseField =
-        Math.sin(x*0.006 + y*0.002);
-
-      let deformation = 0;
-
-      territories.forEach(ter=>{
-        const dx = x-ter.x;
-        const dy = y-ter.y;
-        const dist = Math.sqrt(dx*dx+dy*dy);
-
-        // ISET fuerte y más amplio
-        deformation +=
-          (ter.iset*55) *
-          Math.exp(-dist*0.012);
-      });
-
-      // IRET introduce irregularidad dinámica
-      let instability = 0;
-      territories.forEach(ter=>{
-        if(ter.iret > 0.6){
-          const dx = x-ter.x;
-          const dy = y-ter.y;
-          const dist = Math.sqrt(dx*dx+dy*dy);
-          instability +=
-            Math.sin(dist*0.08 + t*0.15) *
-            ter.iret *
-            6 *
-            Math.exp(-dist*0.02);
-        }
-      });
-
-      // Si hay estrés sistémico → altera campo global
-      let systemicDistortion = 0;
-      if(systemicStress){
-        systemicDistortion =
-          Math.sin(x*0.01 + t*0.08) * 6;
-      }
-
-      const finalY =
-        y +
-        baseField*4 +
-        deformation*0.025 +
-        instability +
-        systemicDistortion;
-
-      if(x===0) mapCtx.moveTo(x,finalY);
-      else mapCtx.lineTo(x,finalY);
-    }
-
-    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
-    mapCtx.stroke();
-  }
-
-  // conexiones
-  territories.forEach((a,i)=>{
-    territories.forEach((b,j)=>{
-      if(i<j){
-        const interaction = Math.abs(a.iset-b.iset);
-        let alpha = 0.05 + interaction*0.2;
-
-        if(a.iret>0.8 && b.iret>0.8){
-          mapCtx.setLineDash([2,4]);
-          alpha += 0.1;
-        } else {
-          mapCtx.setLineDash([]);
-        }
-
-        mapCtx.beginPath();
-        mapCtx.moveTo(a.x,a.y);
-        mapCtx.lineTo(b.x,b.y);
-        mapCtx.strokeStyle="rgba(255,255,255,"+alpha+")";
-        mapCtx.stroke();
-      }
-    });
-  });
-
-  mapCtx.setLineDash([]);
-territories.forEach(ter=>{
-
-  const baseRadius = 3 + ter.iset*4;
-
-  // ===== NÚCLEO =====
-  mapCtx.beginPath();
-  mapCtx.arc(ter.x,ter.y,baseRadius,0,Math.PI*2);
-  mapCtx.fillStyle="#ffffff";
-  mapCtx.fill();
-
-  // ===== CAPAS DE RESONANCIA AVANZADA =====
-  if(ter.iret > 0.3){
-
-    const layers = 3;
-
-    for(let i=1;i<=layers;i++){
-
-      const pulse =
-        Math.sin(t*0.08 + i)*2;
-
-      const expansion =
-        (i*12) +
-        (pulse * ter.iret * 2);
-
-      const alpha =
-        (0.18 * ter.iret) / i;
-
-      const segments = 60;
-
-      mapCtx.beginPath();
-
-      for(let a=0; a<=segments; a++){
-
-        const angle = (a/segments)*Math.PI*2;
-
-        // si riesgo crítico → pierde simetría
-        let distortion = 0;
-
-        if(ter.iret > 0.85){
-          distortion =
-            Math.sin(angle*4 + t*0.2) *
-            ter.iret *
-            4;
-        }
-
-        const rx =
-          (baseRadius + expansion + distortion);
-
-        const ry =
-          (baseRadius + expansion - distortion*0.4);
-
-        const x =
-          ter.x + Math.cos(angle)*rx;
-
-        const y =
-          ter.y + Math.sin(angle)*ry;
-
-        if(a===0) mapCtx.moveTo(x,y);
-        else mapCtx.lineTo(x,y);
-      }
-
-      mapCtx.strokeStyle =
-        "rgba(255,255,255,"+alpha+")";
-
-      mapCtx.lineWidth = 1;
-      mapCtx.stroke();
-    }
-  }
-
-  // ===== TEXTO =====
-  mapCtx.font="11px monospace";
-  mapCtx.fillStyle="rgba(255,255,255,0.6)";
-  mapCtx.textAlign="center";
-  mapCtx.fillText(ter.name,ter.x,ter.y+18);
-
-  mapCtx.fillStyle="rgba(255,255,255,0.45)";
-  mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
-
-  mapCtx.fillStyle="rgba(255,255,255,0.35)";
-  mapCtx.fillText("IRET: "+ter.iret.toFixed(2),ter.x,ter.y+45);
-
-});
-
-  t++;
-  requestAnimationFrame(drawSystem);
-}
-
-drawSystem();
-
-  /* =========================
-   ISET CONCEPTUAL
-========================= */
-
-const isetCanvas = document.getElementById('isetConcept');
-const isetCtx = isetCanvas.getContext('2d');
-isetCanvas.width = 700;
-isetCanvas.height = 260;
-
-function drawISETConcept(){
-
-  isetCtx.clearRect(0,0,isetCanvas.width,isetCanvas.height);
-
-  const w = isetCanvas.width;
-  const h = isetCanvas.height;
-
-  const margin = 60;
-
-  // Ejes
-  isetCtx.beginPath();
-  isetCtx.moveTo(margin, margin);
-  isetCtx.lineTo(margin, h-margin);
-  isetCtx.lineTo(w-margin, h-margin);
-  isetCtx.strokeStyle="rgba(255,255,255,0.4)";
-  isetCtx.stroke();
-
-  isetCtx.font="12px monospace";
-  isetCtx.fillStyle="rgba(255,255,255,0.6)";
-  isetCtx.fillText("Stock", margin-40, margin-10);
-  isetCtx.fillText("Tiempo", w-margin+10, h-margin+20);
-
-  // Curva acumulativa
-  isetCtx.beginPath();
-
-  for(let x=0; x<=w-margin*2; x++){
-
-    const time = x*0.02;
-    const stock =
-      (1-Math.exp(-time)) *
-      (h-margin*2);
-
-    const y =
-      (h-margin) - stock;
-
-    if(x===0)
-      isetCtx.moveTo(margin+x,y);
-    else
-      isetCtx.lineTo(margin+x,y);
-  }
-
-  isetCtx.strokeStyle="rgba(255,255,255,0.8)";
-  isetCtx.stroke();
-
-  // Umbral
-  const thresholdY = margin + 40;
-
-  isetCtx.beginPath();
-  isetCtx.moveTo(margin, thresholdY);
-  isetCtx.lineTo(w-margin, thresholdY);
-  isetCtx.setLineDash([6,6]);
-  isetCtx.strokeStyle="rgba(255,255,255,0.3)";
-  isetCtx.stroke();
-  isetCtx.setLineDash([]);
-
-  isetCtx.fillStyle="rgba(255,255,255,0.5)";
-  isetCtx.fillText("UMBRAL", margin+10, thresholdY-5);
-
-}
-
-drawISETConcept();
-
 
 /* =========================
-   IRET CONCEPTUAL
-========================= */
-
-const iretCanvas = document.getElementById('iretConcept');
-const iretCtx = iretCanvas.getContext('2d');
-iretCanvas.width = 700;
-iretCanvas.height = 260;
-
-function drawIRETConcept(){
-
-  iretCtx.clearRect(0,0,iretCanvas.width,iretCanvas.height);
-
-  const w = iretCanvas.width;
-  const h = iretCanvas.height;
-  const margin = 60;
-
-  // Ejes
-  iretCtx.beginPath();
-  iretCtx.moveTo(margin, margin);
-  iretCtx.lineTo(margin, h-margin);
-  iretCtx.lineTo(w-margin, h-margin);
-  iretCtx.strokeStyle="rgba(255,255,255,0.4)";
-  iretCtx.stroke();
-
-  iretCtx.font="12px monospace";
-  iretCtx.fillStyle="rgba(255,255,255,0.6)";
-  iretCtx.fillText("Velocidad (dISET/dt)", margin-60, margin-10);
-  iretCtx.fillText("ISET", w-margin+10, h-margin+20);
-
-  // Curva de riesgo
-  iretCtx.beginPath();
-
-  for(let x=0; x<=w-margin*2; x++){
-
-    const iset = x/(w-margin*2);
-
-    const velocity = iset;
-
-    const risk =
-      (0.6*iset) +
-      (0.4*velocity);
-
-    const y =
-      (h-margin) -
-      risk*(h-margin*2);
-
-    if(x===0)
-      iretCtx.moveTo(margin+x,y);
-    else
-      iretCtx.lineTo(margin+x,y);
-  }
-
-  iretCtx.strokeStyle="rgba(255,255,255,0.8)";
-  iretCtx.stroke();
-
-  // Zona crítica
-  const criticalY = margin + 30;
-
-  iretCtx.beginPath();
-  iretCtx.moveTo(margin, criticalY);
-  iretCtx.lineTo(w-margin, criticalY);
-  iretCtx.setLineDash([6,6]);
-  iretCtx.strokeStyle="rgba(255,255,255,0.3)";
-  iretCtx.stroke();
-  iretCtx.setLineDash([]);
-
-  iretCtx.fillStyle="rgba(255,255,255,0.5)";
-  iretCtx.fillText("RIESGO CRÍTICO", margin+10, criticalY-5);
-
-}
-
-drawIRETConcept();
-  /* =========================
-   DIAGRAMA DE FASE AGREGADO
+   DIAGRAMA DE FASE
 ========================= */
 
 const phaseCanvas = document.getElementById('phaseDiagram');
 const phaseCtx = phaseCanvas.getContext('2d');
-
 phaseCanvas.width = 700;
 phaseCanvas.height = 300;
 
@@ -641,20 +306,8 @@ function drawPhaseDiagram(){
 
   phaseCtx.clearRect(0,0,w,h);
 
-  // Ejes
-  phaseCtx.beginPath();
-  phaseCtx.moveTo(margin, margin);
-  phaseCtx.lineTo(margin, h-margin);
-  phaseCtx.lineTo(w-margin, h-margin);
-  phaseCtx.strokeStyle="rgba(255,255,255,0.4)";
-  phaseCtx.stroke();
+  updateTerritories();
 
-  phaseCtx.font="12px monospace";
-  phaseCtx.fillStyle="rgba(255,255,255,0.6)";
-  phaseCtx.fillText("dISET/dt", margin-60, margin-10);
-  phaseCtx.fillText("ISET (avg)", w-margin+10, h-margin+20);
-
-  // Calcular promedio agregado
   let totalISET = 0;
   let totalVelocity = 0;
 
@@ -666,49 +319,50 @@ function drawPhaseDiagram(){
   const avgISET = totalISET / territories.length;
   const avgVelocity = totalVelocity / territories.length;
 
-  // Escalado
-  const x =
-    margin +
-    (avgISET / 1.5) *
-    (w - margin*2);
+  phaseHistory.push({iset:avgISET, vel:avgVelocity});
+  if(phaseHistory.length > 250) phaseHistory.shift();
 
-  const y =
-    (h-margin) -
-    ((avgVelocity + 1) / 2) *
-    (h - margin*2);
+  const isets = phaseHistory.map(p=>p.iset);
+  const vels  = phaseHistory.map(p=>p.vel);
 
-  // Guardar historia
-  phaseHistory.push({x,y});
+  const minI = Math.min(...isets);
+  const maxI = Math.max(...isets);
+  const minV = Math.min(...vels);
+  const maxV = Math.max(...vels);
 
-  if(phaseHistory.length > 200){
-    phaseHistory.shift();
-  }
+  const rangeI = (maxI - minI) || 0.01;
+  const rangeV = (maxV - minV) || 0.01;
 
-  // Dibujar trayectoria
   phaseCtx.beginPath();
-
-  phaseHistory.forEach((p,i)=>{
-    if(i===0) phaseCtx.moveTo(p.x,p.y);
-    else phaseCtx.lineTo(p.x,p.y);
-  });
-
-  phaseCtx.strokeStyle="rgba(255,255,255,0.8)";
+  phaseCtx.moveTo(margin, margin);
+  phaseCtx.lineTo(margin, h-margin);
+  phaseCtx.lineTo(w-margin, h-margin);
+  phaseCtx.strokeStyle="rgba(255,255,255,0.4)";
   phaseCtx.stroke();
 
-  // Punto actual
+  phaseCtx.beginPath();
+  phaseHistory.forEach((p,i)=>{
+    const x = margin + ((p.iset-minI)/rangeI)*(w-margin*2);
+    const y = (h-margin) - ((p.vel-minV)/rangeV)*(h-margin*2);
+    if(i===0) phaseCtx.moveTo(x,y);
+    else phaseCtx.lineTo(x,y);
+  });
+  phaseCtx.strokeStyle="rgba(255,255,255,0.9)";
+  phaseCtx.stroke();
+
+  const last = phaseHistory[phaseHistory.length-1];
+  const x = margin + ((last.iset-minI)/rangeI)*(w-margin*2);
+  const y = (h-margin) - ((last.vel-minV)/rangeV)*(h-margin*2);
+
   phaseCtx.beginPath();
   phaseCtx.arc(x,y,5,0,Math.PI*2);
   phaseCtx.fillStyle="white";
   phaseCtx.fill();
-}
 
-function updatePhase(){
-  drawPhaseDiagram();
-  requestAnimationFrame(updatePhase);
+  requestAnimationFrame(drawPhaseDiagram);
 }
+drawPhaseDiagram();
 
-updatePhase();
 </script>
-
 </body>
 </html>
