@@ -70,18 +70,6 @@ h1 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-h1::before, h1::after {
-  content: "EMOFLOW";
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
-}
-
-.glitch::before, .glitch::after { opacity: 0.25; }
-h1::before { transform: translate(-2px, -1px); }
-h1::after { transform: translate(2px, 1px); }
-
 h2 {
   font-size: 22px;
   letter-spacing: 3px;
@@ -120,9 +108,10 @@ canvas {
   <div class="boot-text">INITIALIZING EMOTIONAL FIELD MODEL...</div>
 </div>
 
+<!-- LANDING -->
 <section>
   <div class="container fade">
-    <h1 id="title">EMOFLOW</h1>
+    <h1>EMOFLOW</h1>
     <h2>Inteligencia Emocional Territorial</h2>
     <p>
       Modelización de Flujos Emocionales <br>
@@ -133,6 +122,7 @@ canvas {
   </div>
 </section>
 
+<!-- ISET DINÁMICO -->
 <section>
   <div class="container fade">
     <h2>ISET — Dinámica Acumulativa</h2>
@@ -145,6 +135,7 @@ canvas {
   </div>
 </section>
 
+<!-- ISET TEXTO -->
 <section>
   <div class="container fade">
     <h2>ISET</h2>
@@ -157,6 +148,7 @@ canvas {
   </div>
 </section>
 
+<!-- IRET -->
 <section>
   <div class="container fade">
     <h2>IRET</h2>
@@ -170,6 +162,7 @@ canvas {
   </div>
 </section>
 
+<!-- MAPA -->
 <section>
   <div class="container fade">
     <h2>Arquitectura Analítica</h2>
@@ -183,6 +176,7 @@ canvas {
   </div>
 </section>
 
+<!-- CIERRE -->
 <section>
   <div class="container fade">
     <h2>Nuestro Principio</h2>
@@ -211,102 +205,61 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
-/* GLITCH */
-const title = document.getElementById('title');
-setTimeout(() => {
-  title.classList.add("glitch");
-  setTimeout(() => title.classList.remove("glitch"), 400);
-}, 1500);
+/* ISET DINÁMICO */
 
-/* MAPA AVANZADO EMOFLOW */
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+canvas.width = 700;
+canvas.height = 300;
 
-const mapCanvas = document.getElementById('impactMap');
-const mapCtx = mapCanvas.getContext('2d');
-mapCanvas.width = 700;
-mapCanvas.height = 300;
+let stock = 0;
+let time = 0;
+const threshold = 220;
 
-let t = 0;
+function drawISET() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-const territories = [
-  {x:120,y:90,name:"Norte Urbano",iset:0},
-  {x:350,y:70,name:"Centro Cívico",iset:0},
-  {x:560,y:120,name:"Periferia Este",iset:0},
-  {x:450,y:220,name:"Nodo Industrial",iset:0},
-  {x:200,y:210,name:"Zona Residencial",iset:0}
-];
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height - threshold);
+  ctx.lineTo(canvas.width, canvas.height - threshold);
+  ctx.strokeStyle = "rgba(255,255,255,0.3)";
+  ctx.setLineDash([6,6]);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-function drawAdvancedMap() {
+  ctx.fillStyle="rgba(255,255,255,0.5)";
+  ctx.font="12px monospace";
+  ctx.fillText("CRITICAL", 10, canvas.height - threshold - 5);
 
-  mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
+  ctx.beginPath();
 
-  /* actualizar ISET implícito */
-  territories.forEach((ter,i)=>{
-    ter.iset = 0.5 + 0.5*Math.sin(t*0.02 + i);
-  });
+  stock += (Math.sin(time*0.05)*2 + 2);
+  stock *= 0.99;
 
-  /* campo estructural afectado por territorios */
-  const spacing = 28;
+  const y = canvas.height - stock;
 
-  for(let y=0;y<=mapCanvas.height;y+=spacing){
-    mapCtx.beginPath();
-    for(let x=0;x<=mapCanvas.width;x++){
-
-      let offset = 0;
-
-      territories.forEach(ter=>{
-        const dx = x-ter.x;
-        const dy = y-ter.y;
-        const dist = Math.sqrt(dx*dx+dy*dy);
-        offset += (ter.iset*25) * Math.exp(-dist*0.02);
-      });
-
-      const wave = Math.sin(x*0.02 + t*0.05)*3;
-      const finalY = y + wave + offset*0.02;
-
-      if(x===0) mapCtx.moveTo(x,finalY);
-      else mapCtx.lineTo(x,finalY);
-    }
-
-    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
-    mapCtx.stroke();
+  if(stock > threshold){
+    ctx.strokeStyle="rgba(255,255,255,1)";
+  } else {
+    ctx.strokeStyle="rgba(255,255,255,0.6)";
   }
 
-  /* conexiones sutiles */
-  territories.forEach((a,i)=>{
-    territories.forEach((b,j)=>{
-      if(i<j){
-        const intensity = Math.abs(a.iset-b.iset);
-        mapCtx.beginPath();
-        mapCtx.moveTo(a.x,a.y);
-        mapCtx.lineTo(b.x,b.y);
-        mapCtx.strokeStyle="rgba(255,255,255,"+(0.05+intensity*0.1)+")";
-        mapCtx.stroke();
-      }
-    });
-  });
+  ctx.moveTo(time, y);
+  ctx.lineTo(time+1, y);
+  ctx.stroke();
 
-  /* territorios */
-  territories.forEach(ter=>{
-    const radius = 3 + ter.iset*3;
+  time += 1;
+  if(time > canvas.width){
+    time = 0;
+    stock = 0;
+  }
 
-    mapCtx.beginPath();
-    mapCtx.arc(ter.x,ter.y,radius,0,Math.PI*2);
-    mapCtx.fillStyle="#ffffff";
-    mapCtx.fill();
-
-    mapCtx.font="11px monospace";
-    mapCtx.fillStyle="rgba(255,255,255,0.6)";
-    mapCtx.textAlign="center";
-    mapCtx.fillText(ter.name,ter.x,ter.y+18);
-  });
-
-  t++;
-  requestAnimationFrame(drawAdvancedMap);
+  requestAnimationFrame(drawISET);
 }
 
-drawAdvancedMap();
+drawISET();
 
 </script>
 
 </body>
-  </html>
+</html>
