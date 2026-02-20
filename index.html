@@ -3,189 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMOFLOW</title>
+<title>EMOFLOW Territory</title>
 
 <style>
 body {
-  margin: 0;
-  background: #000;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  overflow-x: hidden;
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family: monospace;
+    overflow-x:hidden;
 }
 
-section {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 40px;
-  text-align: center;
+h1, h2 {
+    text-align:center;
+    letter-spacing:2px;
 }
 
-.container {
-  max-width: 900px;
+.glitch {
+    position: relative;
+    color: white;
 }
-
-h1 {
-  font-size: 48px;
-  letter-spacing: 8px;
-  font-weight: 600;
-  position: relative;
-  display: inline-block;
-}
-
-/* Glitch sutil */
-h1::before,
-h1::after {
-  content: "EMOFLOW";
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
-}
-
-h1::before { transform: translate(-2px, -1px); }
-h1::after { transform: translate(2px, 1px); }
-
 .glitch::before,
 .glitch::after {
-  opacity: 0.2;
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+}
+.glitch::before {
+    animation: glitchTop 3s infinite linear alternate-reverse;
+    color: #0ff;
+}
+.glitch::after {
+    animation: glitchBottom 2s infinite linear alternate-reverse;
+    color: #f0f;
 }
 
-h2 {
-  font-size: 22px;
-  letter-spacing: 3px;
-  margin-bottom: 20px;
-  color: #ccc;
-  font-weight: 500;
+@keyframes glitchTop {
+    0% { clip-path: inset(0 0 90% 0); transform: translate(-2px,-2px);}
+    100% { clip-path: inset(10% 0 60% 0); transform: translate(2px,2px);}
+}
+@keyframes glitchBottom {
+    0% { clip-path: inset(80% 0 0 0); transform: translate(2px,0);}
+    100% { clip-path: inset(60% 0 10% 0); transform: translate(-2px,0);}
 }
 
-p {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #aaa;
-}
-
-.fade {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 1.2s ease;
-}
-
-.fade.visible {
-  opacity: 1;
-  transform: translateY(0);
+.section {
+    padding:60px 20px;
+    max-width:1000px;
+    margin:auto;
 }
 
 canvas {
-  width: 100%;
-  max-width: 700px;
-  height: 320px;
-  margin-top: 40px;
+    display:block;
+    margin:auto;
+    background:#000;
+    border:1px solid #222;
+}
+
+select {
+    background:#111;
+    color:#fff;
+    border:1px solid #333;
+    padding:5px;
+}
+
+.metric {
+    text-align:center;
+    font-size:18px;
+    margin-top:15px;
 }
 </style>
 </head>
 
 <body>
 
-<section>
-  <div class="container fade">
-    <h1 id="title">EMOFLOW</h1>
-    <h2>Inteligencia Emocional Territorial</h2>
-    <p>
-      Modelización de Flujos Emocionales<br>
-      Evaluación de Riesgo Sistémico<br>
-      Anticipación de Saturación Emocional Social
-    </p>
-  </div>
-</section>
+<div class="section">
+    <h1 class="glitch" data-text="EMOFLOW Territory">EMOFLOW Territory</h1>
+    <h2>Modelo dinámico territorial</h2>
+</div>
 
-<section>
-  <div class="container fade">
-    <h2>ISET — Dinámica Acumulativa</h2>
-    <p>
-      ISET representa acumulación emocional territorial.
-      El flujo incrementa el stock.
-      El umbral determina transición crítica.
-    </p>
-    <canvas id="graph"></canvas>
-  </div>
-</section>
+<div class="section">
+    <h2>ISET — Índice de Saturación Emocional Territorial</h2>
+    <canvas id="isetChart" width="800" height="300"></canvas>
+</div>
+
+<div class="section">
+    <h2>IRET — Índice de Riesgo Emocional Territorial</h2>
+    <div class="metric">Valor dinámico IRET: <span id="iretValue">0</span></div>
+</div>
+
+<div class="section">
+    <h2>Heatmap Territorial</h2>
+
+    <label>Seleccionar territorio:</label>
+    <select id="territorySelect">
+        <option value="urbano">Zona Urbana</option>
+        <option value="turistico">Zona Turística</option>
+        <option value="periferico">Zona Periférica</option>
+    </select>
+
+    <canvas id="heatmap" width="800" height="400"></canvas>
+</div>
 
 <script>
-/* Fade */
-const fades = document.querySelectorAll('.fade');
-function checkVisibility() {
-  const trigger = window.innerHeight * 0.85;
-  fades.forEach(fade => {
-    const top = fade.getBoundingClientRect().top;
-    if (top < trigger) fade.classList.add('visible');
-  });
-}
-window.addEventListener('scroll', checkVisibility);
-window.addEventListener('load', checkVisibility);
 
-/* ISET Simulation */
-const canvas = document.getElementById('graph');
-const ctx = canvas.getContext('2d');
-const title = document.getElementById('title');
+// ---------------- ISET + IRET ----------------
 
-canvas.width = 700;
-canvas.height = 320;
+const canvas = document.getElementById("isetChart");
+const ctx = canvas.getContext("2d");
 
 let time = 0;
-let stock = 50; // acumulación inicial
-const threshold = 220;
-const decay = 0.02;
+let IRET = 0;
+const criticalThreshold = 75;
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawChart() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Línea de umbral
-  ctx.beginPath();
-  ctx.strokeStyle = "rgba(255,255,255,0.2)";
-  ctx.moveTo(0, threshold);
-  ctx.lineTo(canvas.width, threshold);
-  ctx.stroke();
+    ctx.strokeStyle = "#0f0";
+    ctx.beginPath();
 
-  ctx.beginPath();
-  ctx.lineWidth = 1;
+    for(let x=0;x<canvas.width;x++){
+        let value = 50 + 30*Math.sin((x+time)/50);
+        let y = canvas.height - (value*3);
+        if(x===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
 
-  stock = 50;
-  let critical = false;
+    // Critical line
+    ctx.strokeStyle = "red";
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height - criticalThreshold*3);
+    ctx.lineTo(canvas.width, canvas.height - criticalThreshold*3);
+    ctx.stroke();
 
-  for (let x = 0; x < canvas.width; x++) {
+    ctx.fillStyle = "red";
+    ctx.fillText("CRITICAL ISET", 10, canvas.height - criticalThreshold*3 - 5);
 
-    // Flow dinámico
-    let flow = Math.sin((x + time) * 0.03) * 4 + 3;
+    IRET = Math.abs(50 + 30*Math.sin(time/40));
+    document.getElementById("iretValue").innerText = IRET.toFixed(2);
 
-    // Acumulación tipo stock-flow
-    stock += flow - (stock * decay);
-
-    if (stock > threshold) critical = true;
-
-    ctx.lineTo(x, canvas.height - stock);
-  }
-
-  ctx.strokeStyle = critical ? "#ffffff" : "rgba(255,255,255,0.6)";
-  ctx.stroke();
-
-  // Texto crítico
-  if (critical) {
-    ctx.font = "14px monospace";
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.fillText("CRITICAL TRANSITION", 20, 30);
-    title.classList.add("glitch");
-  } else {
-    title.classList.remove("glitch");
-  }
-
-  time += 1;
-  requestAnimationFrame(draw);
+    time++;
+    requestAnimationFrame(drawChart);
 }
 
-draw();
+drawChart();
+
+
+// ---------------- HEATMAP ----------------
+
+const heatCanvas = document.getElementById("heatmap");
+const heatCtx = heatCanvas.getContext("2d");
+const selector = document.getElementById("territorySelect");
+
+function drawHeatmap() {
+    heatCtx.clearRect(0,0,heatCanvas.width,heatCanvas.height);
+
+    let densityFactor;
+
+    switch(selector.value){
+        case "urbano": densityFactor = 1.2; break;
+        case "turistico": densityFactor = 1.5; break;
+        case "periferico": densityFactor = 0.8; break;
+    }
+
+    for(let i=0;i<100;i++){
+        let x = Math.random()*heatCanvas.width;
+        let y = Math.random()*heatCanvas.height;
+
+        let intensity = IRET * densityFactor;
+
+        let radius = intensity/2;
+
+        let gradient = heatCtx.createRadialGradient(x,y,0,x,y,radius);
+        gradient.addColorStop(0,"rgba(255,0,0,"+(intensity/100)+")");
+        gradient.addColorStop(1,"rgba(255,0,0,0)");
+
+        heatCtx.fillStyle = gradient;
+        heatCtx.fillRect(x-radius,y-radius,radius*2,radius*2);
+    }
+
+    requestAnimationFrame(drawHeatmap);
+}
+
+drawHeatmap();
+
 </script>
 
 </body>
