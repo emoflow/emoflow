@@ -140,6 +140,7 @@ canvas {
       considerando intensidad de eventos, persistencia temporal
       y sensibilidad estructural.
     </p>
+    <canvas id="isetConcept"></canvas>
   </div>
 </section>
 
@@ -152,6 +153,7 @@ canvas {
       en función de velocidad de incremento,
       proximidad al umbral crítico y variabilidad estructural.
     </p>
+    <canvas id="iretConcept"></canvas>
   </div>
 </section>
 
@@ -472,6 +474,152 @@ function drawSystem(){
 }
 
 drawSystem();
+
+  /* =========================
+   ISET CONCEPTUAL
+========================= */
+
+const isetCanvas = document.getElementById('isetConcept');
+const isetCtx = isetCanvas.getContext('2d');
+isetCanvas.width = 700;
+isetCanvas.height = 260;
+
+function drawISETConcept(){
+
+  isetCtx.clearRect(0,0,isetCanvas.width,isetCanvas.height);
+
+  const w = isetCanvas.width;
+  const h = isetCanvas.height;
+
+  const margin = 60;
+
+  // Ejes
+  isetCtx.beginPath();
+  isetCtx.moveTo(margin, margin);
+  isetCtx.lineTo(margin, h-margin);
+  isetCtx.lineTo(w-margin, h-margin);
+  isetCtx.strokeStyle="rgba(255,255,255,0.4)";
+  isetCtx.stroke();
+
+  isetCtx.font="12px monospace";
+  isetCtx.fillStyle="rgba(255,255,255,0.6)";
+  isetCtx.fillText("Stock", margin-40, margin-10);
+  isetCtx.fillText("Tiempo", w-margin+10, h-margin+20);
+
+  // Curva acumulativa
+  isetCtx.beginPath();
+
+  for(let x=0; x<=w-margin*2; x++){
+
+    const time = x*0.02;
+    const stock =
+      (1-Math.exp(-time)) *
+      (h-margin*2);
+
+    const y =
+      (h-margin) - stock;
+
+    if(x===0)
+      isetCtx.moveTo(margin+x,y);
+    else
+      isetCtx.lineTo(margin+x,y);
+  }
+
+  isetCtx.strokeStyle="rgba(255,255,255,0.8)";
+  isetCtx.stroke();
+
+  // Umbral
+  const thresholdY = margin + 40;
+
+  isetCtx.beginPath();
+  isetCtx.moveTo(margin, thresholdY);
+  isetCtx.lineTo(w-margin, thresholdY);
+  isetCtx.setLineDash([6,6]);
+  isetCtx.strokeStyle="rgba(255,255,255,0.3)";
+  isetCtx.stroke();
+  isetCtx.setLineDash([]);
+
+  isetCtx.fillStyle="rgba(255,255,255,0.5)";
+  isetCtx.fillText("UMBRAL", margin+10, thresholdY-5);
+
+}
+
+drawISETConcept();
+
+
+/* =========================
+   IRET CONCEPTUAL
+========================= */
+
+const iretCanvas = document.getElementById('iretConcept');
+const iretCtx = iretCanvas.getContext('2d');
+iretCanvas.width = 700;
+iretCanvas.height = 260;
+
+function drawIRETConcept(){
+
+  iretCtx.clearRect(0,0,iretCanvas.width,iretCanvas.height);
+
+  const w = iretCanvas.width;
+  const h = iretCanvas.height;
+  const margin = 60;
+
+  // Ejes
+  iretCtx.beginPath();
+  iretCtx.moveTo(margin, margin);
+  iretCtx.lineTo(margin, h-margin);
+  iretCtx.lineTo(w-margin, h-margin);
+  iretCtx.strokeStyle="rgba(255,255,255,0.4)";
+  iretCtx.stroke();
+
+  iretCtx.font="12px monospace";
+  iretCtx.fillStyle="rgba(255,255,255,0.6)";
+  iretCtx.fillText("Velocidad (dISET/dt)", margin-60, margin-10);
+  iretCtx.fillText("ISET", w-margin+10, h-margin+20);
+
+  // Curva de riesgo
+  iretCtx.beginPath();
+
+  for(let x=0; x<=w-margin*2; x++){
+
+    const iset = x/(w-margin*2);
+
+    const velocity = iset;
+
+    const risk =
+      (0.6*iset) +
+      (0.4*velocity);
+
+    const y =
+      (h-margin) -
+      risk*(h-margin*2);
+
+    if(x===0)
+      iretCtx.moveTo(margin+x,y);
+    else
+      iretCtx.lineTo(margin+x,y);
+  }
+
+  iretCtx.strokeStyle="rgba(255,255,255,0.8)";
+  iretCtx.stroke();
+
+  // Zona crítica
+  const criticalY = margin + 30;
+
+  iretCtx.beginPath();
+  iretCtx.moveTo(margin, criticalY);
+  iretCtx.lineTo(w-margin, criticalY);
+  iretCtx.setLineDash([6,6]);
+  iretCtx.strokeStyle="rgba(255,255,255,0.3)";
+  iretCtx.stroke();
+  iretCtx.setLineDash([]);
+
+  iretCtx.fillStyle="rgba(255,255,255,0.5)";
+  iretCtx.fillText("RIESGO CRÍTICO", margin+10, criticalY-5);
+
+}
+
+drawIRETConcept();
 </script>
 
 </body>
