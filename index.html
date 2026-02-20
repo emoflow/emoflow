@@ -97,6 +97,34 @@ canvas {
   height: 320px;
   margin-top: 40px;
 }
+  @media (max-width: 768px) {
+
+  section {
+    padding: 60px 20px;
+  }
+
+  h1 {
+    font-size: 32px;
+    letter-spacing: 4px;
+  }
+
+  h2 {
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+  
 </style>
 </head>
 
@@ -185,7 +213,36 @@ canvas {
 </section>
 
 <script>
+/* MOTOR RESPONSIVE */
+function makeResponsive(canvas, heightRatio){
+  const ctx = canvas.getContext('2d');
 
+  function resize(){
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    const width = rect.width;
+    const height = width * heightRatio;
+
+    canvas.style.width = width + "px";
+    canvas.style.height = height + "px";
+
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+}
+
+/* ACTIVAR EN TUS CANVAS */
+makeResponsive(document.getElementById('graph'), 0.43);
+makeResponsive(document.getElementById('impactMap'), 0.43);
+makeResponsive(document.getElementById('isetConcept'), 0.37);
+makeResponsive(document.getElementById('iretConcept'), 0.37);
+  
 /* FADE */
 const fades = document.querySelectorAll('.fade');
 function checkVisibility() {
@@ -202,8 +259,7 @@ window.addEventListener('load', checkVisibility);
 
 const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
-canvas.width = 700;
-canvas.height = 300;
+
 
 let stock = 0;
 let time = 0;
@@ -253,8 +309,7 @@ drawISET();
 
 const mapCanvas = document.getElementById('impactMap');
 const mapCtx = mapCanvas.getContext('2d');
-mapCanvas.width = 700;
-mapCanvas.height = 300;
+
 
 let t = 0;
 
@@ -481,8 +536,6 @@ drawSystem();
 
 const isetCanvas = document.getElementById('isetConcept');
 const isetCtx = isetCanvas.getContext('2d');
-isetCanvas.width = 700;
-isetCanvas.height = 260;
 
 function drawISETConcept(){
 
@@ -553,8 +606,6 @@ drawISETConcept();
 
 const iretCanvas = document.getElementById('iretConcept');
 const iretCtx = iretCanvas.getContext('2d');
-iretCanvas.width = 700;
-iretCanvas.height = 260;
 
 function drawIRETConcept(){
 
