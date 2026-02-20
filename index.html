@@ -303,13 +303,21 @@ function drawIRET() {
 }
 drawIRET();
 
-/* EMOTIONAL FIELD MAP */
+/* EMOTIONAL FIELD + TERRITORIOS */
 const mapCanvas = document.getElementById('impactMap');
 const mapCtx = mapCanvas.getContext('2d');
 mapCanvas.width = 700;
 mapCanvas.height = 300;
 
 let fieldTime = 0;
+
+const territories = [
+  {x:120, y:90, name:"Norte Urbano"},
+  {x:350, y:70, name:"Centro Cívico"},
+  {x:560, y:120, name:"Periferia Este"},
+  {x:450, y:220, name:"Nodo Industrial"},
+  {x:200, y:210, name:"Zona Residencial"}
+];
 
 function drawField() {
   mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
@@ -339,6 +347,18 @@ function drawField() {
     mapCtx.lineWidth = 1;
     mapCtx.stroke();
   }
+
+  territories.forEach(t => {
+    mapCtx.beginPath();
+    mapCtx.arc(t.x, t.y, 3, 0, Math.PI * 2);
+    mapCtx.fillStyle = "#ffffff";
+    mapCtx.fill();
+
+    mapCtx.font = "11px monospace";
+    mapCtx.fillStyle = "rgba(255,255,255,0.6)";
+    mapCtx.textAlign = "center";
+    mapCtx.fillText(t.name, t.x, t.y + 18);
+  });
 
   fieldTime += 0.03;
   requestAnimationFrame(drawField);
