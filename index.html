@@ -246,7 +246,7 @@ function drawISET() {
 drawISET();
 
 /* =========================
-   MAPA SISTÉMICO CON IRET
+   CAMPO TERRITORIAL REACTIVO EMOFLOW
 ========================= */
 
 const mapCanvas = document.getElementById('impactMap');
@@ -270,24 +270,24 @@ function updateTerritories(){
 
   territories.forEach((ter,i)=>{
 
-    let base = 0.5 + 0.5*Math.sin(t*0.02 + i);
+    let base = 0.6 + 0.6*Math.sin(t*0.02 + i);
 
     territories.forEach((other,j)=>{
       if(i !== j){
         const dx = ter.x - other.x;
         const dy = ter.y - other.y;
         const dist = Math.sqrt(dx*dx+dy*dy);
-        base += other.iset * Math.exp(-dist*0.01) * 0.05;
+        base += other.iset * Math.exp(-dist*0.008) * 0.08;
       }
     });
 
     ter.prev = ter.iset;
-    ter.iset = Math.min(base,1.5);
+    ter.iset = Math.min(base,1.6);
 
     const velocity = ter.iset - ter.prev;
-    const proximity = ter.iset / 1.2;
+    const proximity = ter.iset / 1.3;
 
-    ter.iret = clamp((0.6*proximity) + (0.4*velocity*5));
+    ter.iret = clamp((0.65*proximity) + (0.35*velocity*6));
   });
 }
 
@@ -297,8 +297,9 @@ function drawSystem(){
 
   updateTerritories();
 
-  const spacing = 28;
-  let systemicStress = territories.some(t=>t.iret > 0.85);
+  const spacing = 24;
+
+  const systemicStress = territories.some(t=>t.iret > 0.9);
 
   for(let y=0;y<=mapCanvas.height;y+=spacing){
 
@@ -306,36 +307,69 @@ function drawSystem(){
 
     for(let x=0;x<=mapCanvas.width;x++){
 
-      let structuralGradient = Math.sin(x*0.005 + (systemicStress? t*0.02 : 0)) * 5;
+      let baseField =
+        Math.sin(x*0.006 + y*0.002);
 
-      let offset = 0;
+      let deformation = 0;
 
       territories.forEach(ter=>{
         const dx = x-ter.x;
         const dy = y-ter.y;
         const dist = Math.sqrt(dx*dx+dy*dy);
-        offset += (ter.iset*35) * Math.exp(-dist*0.02);
+
+        // ISET fuerte y más amplio
+        deformation +=
+          (ter.iset*55) *
+          Math.exp(-dist*0.012);
       });
 
-      const finalY = y + structuralGradient + offset*0.02;
+      // IRET introduce irregularidad dinámica
+      let instability = 0;
+      territories.forEach(ter=>{
+        if(ter.iret > 0.6){
+          const dx = x-ter.x;
+          const dy = y-ter.y;
+          const dist = Math.sqrt(dx*dx+dy*dy);
+          instability +=
+            Math.sin(dist*0.08 + t*0.15) *
+            ter.iret *
+            6 *
+            Math.exp(-dist*0.02);
+        }
+      });
+
+      // Si hay estrés sistémico → altera campo global
+      let systemicDistortion = 0;
+      if(systemicStress){
+        systemicDistortion =
+          Math.sin(x*0.01 + t*0.08) * 6;
+      }
+
+      const finalY =
+        y +
+        baseField*4 +
+        deformation*0.025 +
+        instability +
+        systemicDistortion;
 
       if(x===0) mapCtx.moveTo(x,finalY);
       else mapCtx.lineTo(x,finalY);
     }
 
-    mapCtx.strokeStyle="rgba(255,255,255,0.06)";
+    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
     mapCtx.stroke();
   }
 
+  // conexiones
   territories.forEach((a,i)=>{
     territories.forEach((b,j)=>{
       if(i<j){
         const interaction = Math.abs(a.iset-b.iset);
-        let alpha = 0.04 + interaction*0.15;
+        let alpha = 0.05 + interaction*0.2;
 
         if(a.iret>0.8 && b.iret>0.8){
-          alpha += 0.1;
           mapCtx.setLineDash([2,4]);
+          alpha += 0.1;
         } else {
           mapCtx.setLineDash([]);
         }
@@ -355,11 +389,19 @@ function drawSystem(){
 
     const radius = 3 + ter.iset*4;
 
+    // Halo proporcional a IRET
     if(ter.iret > 0.4){
-      const pulse = Math.sin(t*0.1)*2;
+      const pulse = Math.sin(t*0.12)*2;
       mapCtx.beginPath();
-      mapCtx.arc(ter.x,ter.y,radius + 6 + pulse*ter.iret,0,Math.PI*2);
-      mapCtx.strokeStyle="rgba(255,255,255,"+(0.15*ter.iret)+")";
+      mapCtx.arc(
+        ter.x,
+        ter.y,
+        radius + 8 + pulse*ter.iret,
+        0,
+        Math.PI*2
+      );
+      mapCtx.strokeStyle=
+        "rgba(255,255,255,"+(0.2*ter.iret)+")";
       mapCtx.stroke();
     }
 
@@ -373,7 +415,7 @@ function drawSystem(){
     mapCtx.textAlign="center";
     mapCtx.fillText(ter.name,ter.x,ter.y+18);
 
-    mapCtx.fillStyle="rgba(255,255,255,0.4)";
+    mapCtx.fillStyle="rgba(255,255,255,0.45)";
     mapCtx.fillText("ISET: "+ter.iset.toFixed(2),ter.x,ter.y+32);
 
     mapCtx.fillStyle="rgba(255,255,255,0.35)";
@@ -385,7 +427,6 @@ function drawSystem(){
 }
 
 drawSystem();
-
 </script>
 
 </body>
