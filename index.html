@@ -24,14 +24,33 @@ section {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 900px;
 }
 
 h1 {
-  font-size: 40px;
-  letter-spacing: 6px;
-  margin-bottom: 20px;
+  font-size: 48px;
+  letter-spacing: 8px;
   font-weight: 600;
+  position: relative;
+  display: inline-block;
+}
+
+/* Glitch sutil */
+h1::before,
+h1::after {
+  content: "EMOFLOW";
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+
+h1::before { transform: translate(-2px, -1px); }
+h1::after { transform: translate(2px, 1px); }
+
+.glitch::before,
+.glitch::after {
+  opacity: 0.2;
 }
 
 h2 {
@@ -48,12 +67,6 @@ p {
   color: #aaa;
 }
 
-.small {
-  font-size: 14px;
-  color: #666;
-  margin-top: 30px;
-}
-
 .fade {
   opacity: 0;
   transform: translateY(20px);
@@ -65,14 +78,11 @@ p {
   transform: translateY(0);
 }
 
-a {
-  color: #fff;
-  text-decoration: none;
-  border-bottom: 1px solid #444;
-}
-
-a:hover {
-  border-bottom: 1px solid #fff;
+canvas {
+  width: 100%;
+  max-width: 700px;
+  height: 320px;
+  margin-top: 40px;
 }
 </style>
 </head>
@@ -81,82 +91,101 @@ a:hover {
 
 <section>
   <div class="container fade">
-    <h1>EMOFLOW</h1>
+    <h1 id="title">EMOFLOW</h1>
     <h2>Inteligencia Emocional Territorial</h2>
     <p>
-      Modelización de Flujos Emocionales Colectivos<br>
+      Modelización de Flujos Emocionales<br>
       Evaluación de Riesgo Sistémico<br>
       Anticipación de Saturación Emocional Social
     </p>
-    <p class="small">
-      <a href="mailto:emoflow@proton.me">emoflow@proton.me</a>
-    </p>
   </div>
 </section>
 
 <section>
   <div class="container fade">
-    <h2>ISET</h2>
+    <h2>ISET — Dinámica Acumulativa</h2>
     <p>
-      Índice de Saturación Emocional Territorial.
-      Mide la acumulación de tensión afectiva en un espacio geográfico
-      determinado, considerando densidad poblacional, intensidad de eventos,
-      sensibilidad estructural y persistencia temporal.
+      ISET representa acumulación emocional territorial.
+      El flujo incrementa el stock.
+      El umbral determina transición crítica.
     </p>
-  </div>
-</section>
-
-<section>
-  <div class="container fade">
-    <h2>IRET</h2>
-    <p>
-      Índice de Riesgo Emocional Territorial.
-      Evalúa la probabilidad de fractura sistémica derivada
-      de la saturación emocional acumulada.
-      Integra variabilidad, velocidad de incremento y umbrales críticos.
-    </p>
-  </div>
-</section>
-
-<section>
-  <div class="container fade">
-    <h2>Stock–Flow Model</h2>
-    <p>
-      EMOFLOW opera bajo lógica stock–flow.
-      El stock representa la acumulación emocional.
-      El flow representa eventos, estímulos y tensiones.
-      La dinámica entre ambos determina estabilidad o colapso.
-    </p>
-  </div>
-</section>
-
-<section>
-  <div class="container fade">
-    <h2>Arquitectura Analítica</h2>
-    <p>
-      Sensibilidad estructural.<br>
-      Mapas de impacto emocional.<br>
-      Simulación dinámica territorial.<br>
-      Detección anticipada de puntos críticos.
-    </p>
+    <canvas id="graph"></canvas>
   </div>
 </section>
 
 <script>
+/* Fade */
 const fades = document.querySelectorAll('.fade');
-
 function checkVisibility() {
   const trigger = window.innerHeight * 0.85;
   fades.forEach(fade => {
     const top = fade.getBoundingClientRect().top;
-    if (top < trigger) {
-      fade.classList.add('visible');
-    }
+    if (top < trigger) fade.classList.add('visible');
   });
 }
-
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
+
+/* ISET Simulation */
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+const title = document.getElementById('title');
+
+canvas.width = 700;
+canvas.height = 320;
+
+let time = 0;
+let stock = 50; // acumulación inicial
+const threshold = 220;
+const decay = 0.02;
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Línea de umbral
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(255,255,255,0.2)";
+  ctx.moveTo(0, threshold);
+  ctx.lineTo(canvas.width, threshold);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.lineWidth = 1;
+
+  stock = 50;
+  let critical = false;
+
+  for (let x = 0; x < canvas.width; x++) {
+
+    // Flow dinámico
+    let flow = Math.sin((x + time) * 0.03) * 4 + 3;
+
+    // Acumulación tipo stock-flow
+    stock += flow - (stock * decay);
+
+    if (stock > threshold) critical = true;
+
+    ctx.lineTo(x, canvas.height - stock);
+  }
+
+  ctx.strokeStyle = critical ? "#ffffff" : "rgba(255,255,255,0.6)";
+  ctx.stroke();
+
+  // Texto crítico
+  if (critical) {
+    ctx.font = "14px monospace";
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillText("CRITICAL TRANSITION", 20, 30);
+    title.classList.add("glitch");
+  } else {
+    title.classList.remove("glitch");
+  }
+
+  time += 1;
+  requestAnimationFrame(draw);
+}
+
+draw();
 </script>
 
 </body>
