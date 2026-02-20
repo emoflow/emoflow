@@ -52,9 +52,7 @@ section {
   text-align: center;
 }
 
-.container {
-  max-width: 900px;
-}
+.container { max-width: 900px; }
 
 h1 {
   font-size: 48px;
@@ -81,7 +79,6 @@ h1::before, h1::after {
 }
 
 .glitch::before, .glitch::after { opacity: 0.25; }
-
 h1::before { transform: translate(-2px, -1px); }
 h1::after { transform: translate(2px, 1px); }
 
@@ -93,17 +90,9 @@ h2 {
   font-weight: 500;
 }
 
-p {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #aaa;
-}
+p { font-size: 16px; line-height: 1.8; color: #aaa; }
 
-.small {
-  font-size: 14px;
-  color: #666;
-  margin-top: 40px;
-}
+.small { font-size: 14px; color: #666; margin-top: 40px; }
 
 .fade {
   opacity: 0;
@@ -140,9 +129,7 @@ canvas {
       Evaluación de Riesgo Sistémico<br>
       Anticipación de Saturación Emocional Social
     </p>
-    <p class="small">
-      emoflow@proton.me
-    </p>
+    <p class="small">emoflow@proton.me</p>
   </div>
 </section>
 
@@ -212,6 +199,7 @@ canvas {
 
 <script>
 
+/* FADE */
 const fades = document.querySelectorAll('.fade');
 function checkVisibility() {
   const trigger = window.innerHeight * 0.85;
@@ -223,150 +211,102 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
+/* GLITCH */
 const title = document.getElementById('title');
 setTimeout(() => {
   title.classList.add("glitch");
-  setTimeout(() => {
-    title.classList.remove("glitch");
-  }, 400);
+  setTimeout(() => title.classList.remove("glitch"), 400);
 }, 1500);
 
-/* ISET */
-const canvas = document.getElementById('graph');
-const ctx = canvas.getContext('2d');
-canvas.width = 700;
-canvas.height = 320;
+/* MAPA AVANZADO EMOFLOW */
 
-let time = 0;
-const threshold = 220;
-const decay = 0.02;
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.beginPath();
-  ctx.strokeStyle = "rgba(255,255,255,0.2)";
-  ctx.moveTo(0, threshold);
-  ctx.lineTo(canvas.width, threshold);
-  ctx.stroke();
-
-  ctx.beginPath();
-  let stock = 50;
-  let critical = false;
-
-  for (let x = 0; x < canvas.width; x++) {
-    let flow = Math.sin((x + time) * 0.03) * 4 + 3;
-    stock += flow - (stock * decay);
-    if (stock > threshold) critical = true;
-    ctx.lineTo(x, canvas.height - stock);
-  }
-
-  ctx.strokeStyle = critical ? "#ffffff" : "rgba(255,255,255,0.6)";
-  ctx.stroke();
-
-  time += 1;
-  requestAnimationFrame(draw);
-}
-draw();
-
-/* IRET */
-const iretCanvas = document.getElementById('iretGraph');
-const iretCtx = iretCanvas.getContext('2d');
-iretCanvas.width = 700;
-iretCanvas.height = 200;
-
-let iretTime = 0;
-
-function drawIRET() {
-  iretCtx.clearRect(0, 0, iretCanvas.width, iretCanvas.height);
-
-  iretCtx.beginPath();
-  let risk = false;
-
-  for (let x = 0; x < iretCanvas.width; x++) {
-    let velocity = Math.cos((x + iretTime) * 0.04) * 20 + 100;
-    if (velocity > 130) risk = true;
-    iretCtx.lineTo(x, iretCanvas.height - velocity);
-  }
-
-  iretCtx.strokeStyle = risk ? "#ffffff" : "rgba(255,255,255,0.5)";
-  iretCtx.stroke();
-
-  if (risk) {
-    iretCtx.font = "12px monospace";
-    iretCtx.fillStyle = "rgba(255,255,255,0.7)";
-    iretCtx.fillText("RISK ZONE", 20, 20);
-  }
-
-  iretTime += 1;
-  requestAnimationFrame(drawIRET);
-}
-drawIRET();
-
-/* EMOTIONAL FIELD + TERRITORIOS */
 const mapCanvas = document.getElementById('impactMap');
 const mapCtx = mapCanvas.getContext('2d');
 mapCanvas.width = 700;
 mapCanvas.height = 300;
 
-let fieldTime = 0;
+let t = 0;
 
 const territories = [
-  {x:120, y:90, name:"Norte Urbano"},
-  {x:350, y:70, name:"Centro Cívico"},
-  {x:560, y:120, name:"Periferia Este"},
-  {x:450, y:220, name:"Nodo Industrial"},
-  {x:200, y:210, name:"Zona Residencial"}
+  {x:120,y:90,name:"Norte Urbano",iset:0},
+  {x:350,y:70,name:"Centro Cívico",iset:0},
+  {x:560,y:120,name:"Periferia Este",iset:0},
+  {x:450,y:220,name:"Nodo Industrial",iset:0},
+  {x:200,y:210,name:"Zona Residencial",iset:0}
 ];
 
-function drawField() {
-  mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+function drawAdvancedMap() {
 
-  const spacing = 30;
+  mapCtx.clearRect(0,0,mapCanvas.width,mapCanvas.height);
 
-  for (let y = 0; y <= mapCanvas.height; y += spacing) {
+  /* actualizar ISET implícito */
+  territories.forEach((ter,i)=>{
+    ter.iset = 0.5 + 0.5*Math.sin(t*0.02 + i);
+  });
+
+  /* campo estructural afectado por territorios */
+  const spacing = 28;
+
+  for(let y=0;y<=mapCanvas.height;y+=spacing){
     mapCtx.beginPath();
+    for(let x=0;x<=mapCanvas.width;x++){
 
-    for (let x = 0; x <= mapCanvas.width; x++) {
+      let offset = 0;
 
-      const dx = x - mapCanvas.width/2;
-      const dy = y - mapCanvas.height/2;
-      const dist = Math.sqrt(dx*dx + dy*dy);
+      territories.forEach(ter=>{
+        const dx = x-ter.x;
+        const dy = y-ter.y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        offset += (ter.iset*25) * Math.exp(-dist*0.02);
+      });
 
-      const pressure = Math.sin(dist * 0.02 - fieldTime) * 8;
-      const offsetY = pressure * Math.exp(-dist * 0.003);
+      const wave = Math.sin(x*0.02 + t*0.05)*3;
+      const finalY = y + wave + offset*0.02;
 
-      if (x === 0) {
-        mapCtx.moveTo(x, y + offsetY);
-      } else {
-        mapCtx.lineTo(x, y + offsetY);
-      }
+      if(x===0) mapCtx.moveTo(x,finalY);
+      else mapCtx.lineTo(x,finalY);
     }
 
-    mapCtx.strokeStyle = "rgba(255,255,255,0.08)";
-    mapCtx.lineWidth = 1;
+    mapCtx.strokeStyle="rgba(255,255,255,0.07)";
     mapCtx.stroke();
   }
 
-  territories.forEach(t => {
-    mapCtx.beginPath();
-    mapCtx.arc(t.x, t.y, 3, 0, Math.PI * 2);
-    mapCtx.fillStyle = "#ffffff";
-    mapCtx.fill();
-
-    mapCtx.font = "11px monospace";
-    mapCtx.fillStyle = "rgba(255,255,255,0.6)";
-    mapCtx.textAlign = "center";
-    mapCtx.fillText(t.name, t.x, t.y + 18);
+  /* conexiones sutiles */
+  territories.forEach((a,i)=>{
+    territories.forEach((b,j)=>{
+      if(i<j){
+        const intensity = Math.abs(a.iset-b.iset);
+        mapCtx.beginPath();
+        mapCtx.moveTo(a.x,a.y);
+        mapCtx.lineTo(b.x,b.y);
+        mapCtx.strokeStyle="rgba(255,255,255,"+(0.05+intensity*0.1)+")";
+        mapCtx.stroke();
+      }
+    });
   });
 
-  fieldTime += 0.03;
-  requestAnimationFrame(drawField);
+  /* territorios */
+  territories.forEach(ter=>{
+    const radius = 3 + ter.iset*3;
+
+    mapCtx.beginPath();
+    mapCtx.arc(ter.x,ter.y,radius,0,Math.PI*2);
+    mapCtx.fillStyle="#ffffff";
+    mapCtx.fill();
+
+    mapCtx.font="11px monospace";
+    mapCtx.fillStyle="rgba(255,255,255,0.6)";
+    mapCtx.textAlign="center";
+    mapCtx.fillText(ter.name,ter.x,ter.y+18);
+  });
+
+  t++;
+  requestAnimationFrame(drawAdvancedMap);
 }
 
-drawField();
+drawAdvancedMap();
 
 </script>
 
 </body>
-</html>
+  </html>
