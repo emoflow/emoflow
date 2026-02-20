@@ -44,7 +44,6 @@ body {
   50% { opacity: 1; }
 }
 
-/* ===== SECCIONES ===== */
 section {
   min-height: 100vh;
   display: flex;
@@ -77,7 +76,6 @@ h1 {
   }
 }
 
-/* Micro glitch */
 h1::before,
 h1::after {
   content: "EMOFLOW";
@@ -137,12 +135,10 @@ canvas {
 
 <body>
 
-<!-- BOOT -->
 <div class="boot-overlay">
   <div class="boot-text">INITIALIZING EMOTIONAL FIELD MODEL...</div>
 </div>
 
-<!-- HOME -->
 <section>
   <div class="container fade">
     <h1 id="title">EMOFLOW</h1>
@@ -158,7 +154,6 @@ canvas {
   </div>
 </section>
 
-<!-- ISET SIMULACIÓN -->
 <section>
   <div class="container fade">
     <h2>ISET — Dinámica Acumulativa</h2>
@@ -171,7 +166,6 @@ canvas {
   </div>
 </section>
 
-<!-- ISET CONCEPTUAL -->
 <section>
   <div class="container fade">
     <h2>ISET</h2>
@@ -184,7 +178,6 @@ canvas {
   </div>
 </section>
 
-<!-- IRET -->
 <section>
   <div class="container fade">
     <h2>IRET</h2>
@@ -194,10 +187,10 @@ canvas {
       en función de velocidad de incremento,
       proximidad al umbral crítico y variabilidad estructural.
     </p>
+    <canvas id="iretGraph"></canvas>
   </div>
 </section>
 
-<!-- ARQUITECTURA -->
 <section>
   <div class="container fade">
     <h2>Arquitectura Analítica</h2>
@@ -207,10 +200,10 @@ canvas {
       Sensibilidad estructural.<br>
       Modelización dinámica territorial.
     </p>
+    <canvas id="impactMap"></canvas>
   </div>
 </section>
 
-<!-- CIERRE -->
 <section>
   <div class="container fade">
     <h2>Nuestro Principio</h2>
@@ -227,7 +220,6 @@ canvas {
 
 <script>
 
-/* Fade */
 const fades = document.querySelectorAll('.fade');
 function checkVisibility() {
   const trigger = window.innerHeight * 0.85;
@@ -239,7 +231,6 @@ function checkVisibility() {
 window.addEventListener('scroll', checkVisibility);
 window.addEventListener('load', checkVisibility);
 
-/* Micro glitch inicial */
 const title = document.getElementById('title');
 setTimeout(() => {
   title.classList.add("glitch");
@@ -248,10 +239,9 @@ setTimeout(() => {
   }, 400);
 }, 1500);
 
-/* ISET Simulation */
+/* ISET */
 const canvas = document.getElementById('graph');
 const ctx = canvas.getContext('2d');
-
 canvas.width = 700;
 canvas.height = 320;
 
@@ -277,9 +267,7 @@ function draw() {
   for (let x = 0; x < canvas.width; x++) {
     let flow = Math.sin((x + time) * 0.03) * 4 + 3;
     stock += flow - (stock * decay);
-
     if (stock > threshold) critical = true;
-
     ctx.lineTo(x, canvas.height - stock);
   }
 
@@ -289,8 +277,85 @@ function draw() {
   time += 1;
   requestAnimationFrame(draw);
 }
-
 draw();
+
+/* IRET */
+const iretCanvas = document.getElementById('iretGraph');
+const iretCtx = iretCanvas.getContext('2d');
+iretCanvas.width = 700;
+iretCanvas.height = 200;
+
+let iretTime = 0;
+
+function drawIRET() {
+  iretCtx.clearRect(0, 0, iretCanvas.width, iretCanvas.height);
+
+  iretCtx.beginPath();
+  let risk = false;
+
+  for (let x = 0; x < iretCanvas.width; x++) {
+    let velocity = Math.cos((x + iretTime) * 0.04) * 20 + 100;
+    if (velocity > 130) risk = true;
+    iretCtx.lineTo(x, iretCanvas.height - velocity);
+  }
+
+  iretCtx.strokeStyle = risk ? "#ffffff" : "rgba(255,255,255,0.5)";
+  iretCtx.stroke();
+
+  if (risk) {
+    iretCtx.font = "12px monospace";
+    iretCtx.fillStyle = "rgba(255,255,255,0.7)";
+    iretCtx.fillText("RISK ZONE", 20, 20);
+  }
+
+  iretTime += 1;
+  requestAnimationFrame(drawIRET);
+}
+drawIRET();
+
+/* Impact Map */
+const mapCanvas = document.getElementById('impactMap');
+const mapCtx = mapCanvas.getContext('2d');
+mapCanvas.width = 700;
+mapCanvas.height = 300;
+
+const nodes = [
+  {x:150,y:120},
+  {x:300,y:80},
+  {x:500,y:150},
+  {x:400,y:240},
+  {x:200,y:220}
+];
+
+let pulse = 0;
+
+function drawMap() {
+  mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+
+  mapCtx.strokeStyle = "rgba(255,255,255,0.1)";
+  nodes.forEach((n1,i) => {
+    nodes.forEach((n2,j) => {
+      if(i<j){
+        mapCtx.beginPath();
+        mapCtx.moveTo(n1.x,n1.y);
+        mapCtx.lineTo(n2.x,n2.y);
+        mapCtx.stroke();
+      }
+    });
+  });
+
+  nodes.forEach((node,index) => {
+    mapCtx.beginPath();
+    let radius = 4 + Math.sin(pulse + index)*1.5;
+    mapCtx.arc(node.x,node.y,radius,0,Math.PI*2);
+    mapCtx.fillStyle = "rgba(255,255,255,0.8)";
+    mapCtx.fill();
+  });
+
+  pulse += 0.03;
+  requestAnimationFrame(drawMap);
+}
+drawMap();
 
 </script>
 
