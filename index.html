@@ -128,6 +128,7 @@ canvas {
       El umbral determina transición crítica.
     </p>
     <canvas id="graph"></canvas>
+    <canvas id="phaseDiagram"></canvas>
   </div>
 </section>
 
@@ -620,6 +621,93 @@ function drawIRETConcept(){
 }
 
 drawIRETConcept();
+  /* =========================
+   DIAGRAMA DE FASE AGREGADO
+========================= */
+
+const phaseCanvas = document.getElementById('phaseDiagram');
+const phaseCtx = phaseCanvas.getContext('2d');
+
+phaseCanvas.width = 700;
+phaseCanvas.height = 300;
+
+let phaseHistory = [];
+
+function drawPhaseDiagram(){
+
+  const w = phaseCanvas.width;
+  const h = phaseCanvas.height;
+  const margin = 60;
+
+  phaseCtx.clearRect(0,0,w,h);
+
+  // Ejes
+  phaseCtx.beginPath();
+  phaseCtx.moveTo(margin, margin);
+  phaseCtx.lineTo(margin, h-margin);
+  phaseCtx.lineTo(w-margin, h-margin);
+  phaseCtx.strokeStyle="rgba(255,255,255,0.4)";
+  phaseCtx.stroke();
+
+  phaseCtx.font="12px monospace";
+  phaseCtx.fillStyle="rgba(255,255,255,0.6)";
+  phaseCtx.fillText("dISET/dt", margin-60, margin-10);
+  phaseCtx.fillText("ISET (avg)", w-margin+10, h-margin+20);
+
+  // Calcular promedio agregado
+  let totalISET = 0;
+  let totalVelocity = 0;
+
+  territories.forEach(ter=>{
+    totalISET += ter.iset;
+    totalVelocity += ter.velocity;
+  });
+
+  const avgISET = totalISET / territories.length;
+  const avgVelocity = totalVelocity / territories.length;
+
+  // Escalado
+  const x =
+    margin +
+    (avgISET / 1.5) *
+    (w - margin*2);
+
+  const y =
+    (h-margin) -
+    ((avgVelocity + 1) / 2) *
+    (h - margin*2);
+
+  // Guardar historia
+  phaseHistory.push({x,y});
+
+  if(phaseHistory.length > 200){
+    phaseHistory.shift();
+  }
+
+  // Dibujar trayectoria
+  phaseCtx.beginPath();
+
+  phaseHistory.forEach((p,i)=>{
+    if(i===0) phaseCtx.moveTo(p.x,p.y);
+    else phaseCtx.lineTo(p.x,p.y);
+  });
+
+  phaseCtx.strokeStyle="rgba(255,255,255,0.8)";
+  phaseCtx.stroke();
+
+  // Punto actual
+  phaseCtx.beginPath();
+  phaseCtx.arc(x,y,5,0,Math.PI*2);
+  phaseCtx.fillStyle="white";
+  phaseCtx.fill();
+}
+
+function updatePhase(){
+  drawPhaseDiagram();
+  requestAnimationFrame(updatePhase);
+}
+
+updatePhase();
 </script>
 
 </body>
