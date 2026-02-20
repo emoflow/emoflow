@@ -276,7 +276,7 @@ territories.forEach(ter=>{
   mapCtx.fillStyle="#ffffff";
   mapCtx.fill();
 
-  // ===== CAPAS DE RESONANCIA =====
+  // ===== CAPAS DE RESONANCIA AVANZADA =====
   if(ter.iret > 0.3){
 
     const layers = 3;
@@ -293,14 +293,39 @@ territories.forEach(ter=>{
       const alpha =
         (0.18 * ter.iret) / i;
 
+      const segments = 60;
+
       mapCtx.beginPath();
-      mapCtx.arc(
-        ter.x,
-        ter.y,
-        baseRadius + expansion,
-        0,
-        Math.PI*2
-      );
+
+      for(let a=0; a<=segments; a++){
+
+        const angle = (a/segments)*Math.PI*2;
+
+        // si riesgo crítico → pierde simetría
+        let distortion = 0;
+
+        if(ter.iret > 0.85){
+          distortion =
+            Math.sin(angle*4 + t*0.2) *
+            ter.iret *
+            4;
+        }
+
+        const rx =
+          (baseRadius + expansion + distortion);
+
+        const ry =
+          (baseRadius + expansion - distortion*0.4);
+
+        const x =
+          ter.x + Math.cos(angle)*rx;
+
+        const y =
+          ter.y + Math.sin(angle)*ry;
+
+        if(a===0) mapCtx.moveTo(x,y);
+        else mapCtx.lineTo(x,y);
+      }
 
       mapCtx.strokeStyle =
         "rgba(255,255,255,"+alpha+")";
